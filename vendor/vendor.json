@@ -1,0 +1,31 @@
+{
+	"comment": "",
+	"ignore": "test",
+	"package": [
+		{
+			"checksumSHA1": "Aw8z8w/d+EFt8XCUYPjzSe0bPrU=",
+			"path": "github.com/gorilla/mux",
+			"revision": "cb4698366aa625048f3b815af6a0dea8aef9280a",
+			"revisionTime": "2018-06-05T21:15:56Z"
+		},
+		{
+			"checksumSHA1": "t06GpE7X4olsyp2d26RuKCDzC7w=",
+			"path": "github.com/influxdata/influxdb/client/v2",
+			"revision": "3bcb8ad9b24f8036a6ab20cd985df8e2e341111a",
+			"revisionTime": "2018-08-06T14:24:49Z"
+		},
+		{
+			"checksumSHA1": "8bMEm2PdAkKaqpLFilmT9MC1j1c=",
+			"path": "github.com/influxdata/influxdb/models",
+			"revision": "3bcb8ad9b24f8036a6ab20cd985df8e2e341111a",
+			"revisionTime": "2018-08-06T14:24:49Z"
+		},
+		{
+			"checksumSHA1": "Z0Bb5PWa5WL/j5Dm2KJCLGn1l7U=",
+			"path": "github.com/influxdata/influxdb/pkg/escape",
+			"revision": "3bcb8ad9b24f8036a6ab20cd985df8e2e341111a",
+			"revisionTime": "2018-08-06T14:24:49Z"
+		}
+	],
+	"rootPath": "github.com/huanwei/kube-spy"
+}

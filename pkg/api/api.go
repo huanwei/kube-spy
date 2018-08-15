@@ -12,6 +12,12 @@ type ApiServer struct {
 
 // See https://github.com/influxdata/influxdb/tree/master/client
 
-func (a *ApiServer) Initialize(user, password, dbname string) {}
+func (a *ApiServer) Initialize(user, password, dbname string) {
+	client_v2.NewHTTPClient(client_v2.HTTPConfig{
+		Addr:     "http://localhost:8086",
+		Username: user,
+		Password: password,
+	})
+}
 
 func (a *ApiServer) Run(addr string) {}

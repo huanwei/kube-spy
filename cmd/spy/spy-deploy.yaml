@@ -15,7 +15,7 @@ spec:
         name: kube-spy
     spec:
       nodeSelector:
-        chaos: "on"
+        spy: "on"
       containers:
       - name: kube-spy
         securityContext:

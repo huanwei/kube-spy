@@ -27,24 +27,27 @@ func main() {
 	// Get API server address
 	host := spy.GetHost(clientset, services[0])
 
-	glog.Infof("There are %d chaos, %d test case in the list", len(spyConfig.Chaos_list), len(spyConfig.Testcase_list))
+	glog.Infof("There are %d chaos, %d test case in the list", len(spyConfig.ChaosList), len(spyConfig.TestCaseList))
 
 	// Len(chaos) + 1 tests, first one as normal test
 	for i := -1; i < len(services); i++ {
 		if i == -1 {
 			// Normal test
 			glog.Infof("Normal test")
-			spy.Dotests(spyConfig.Testcase_list, host)
+			spy.Dotests(spyConfig.TestCaseList, host)
 		} else {
 			// Chaos tests
-			for _, chaos := range spyConfig.Chaos_list {
+			for _, chaos := range spyConfig.ChaosList {
 				glog.Infof("Chaos test: %s", chaos)
 				// Add chaos
-				//spy.AddChaos(clientset,&spyConfig,services[i],chaos)
+				err:=spy.AddChaos(clientset,spyConfig,services[i],chaos)
+				if err!=nil{
+					glog.Errorf("Adding chaos error: %s",err)
+				}
 				// Start test
-				spy.Dotests(spyConfig.Testcase_list, host)
+				spy.Dotests(spyConfig.TestCaseList, host)
 				// Clear chaos
-				//spy.ClearChaos(clientset,&spyConfig)
+				spy.CloseChaos(clientset,spyConfig)
 			}
 		}
 

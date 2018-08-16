@@ -1,9 +1,9 @@
 Namespace: "default"
 
-Service_list:
+ServiceList:
   - "httpbin-7bb6ccb769-tql6h"
 
-Testcase_list:
+TestCaseList:
 #  - method: "GET"
 #    url: "/headers"
 #    headers:
@@ -18,6 +18,9 @@ Testcase_list:
     url: "/get"
     headers:
 
-Chaos_list:
+ChaosList:
   - ",delay,100ms"
+  - ",delay,200ms"
   - ",loss,50%"
+
+SyncDuration: "3"

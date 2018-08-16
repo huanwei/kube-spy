@@ -1,0 +1,13 @@
+Namespace: "default"
+Service_list:
+  - httpbin-7bb6ccb769-tql6h
+API_list:
+  - method: GET
+    url: "/headers"
+    headers:
+      Content-Type: "application/json"
+    body: "{ languages: [ 'Ruby', 'Perl', 'Python', 'c' ] }"
+  - method: GET
+    url: "/get"
+    headers:
+    body:

@@ -29,6 +29,8 @@ spec:
           mountPath: /etc/localtime
         - name: log
           mountPath: /tmp
+        - name: config
+          mountPath: /spy
        # command:
        # - kube-chaos
        # - --etcd-endpoint=http://10.96.232.136:6666
@@ -47,5 +49,11 @@ spec:
       - name: log
         hostPath:
           path: /tmp
+      - name: config
+        configMap:
+          name: spy-config
+          items:
+            - key: spy
+              path: spy.conf
       #hostNetwork: true
       #dnsPolicy: ClusterFirstWithHostNet

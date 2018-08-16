@@ -6,8 +6,8 @@ import (
 )
 
 type ApiServer struct {
-	Router *mux.Router
-	InfluxDB     *client_v2.Client
+	Router   *mux.Router
+	InfluxDB *client_v2.Client
 }
 
 // See https://github.com/influxdata/influxdb/tree/master/client

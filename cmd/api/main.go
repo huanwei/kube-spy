@@ -13,5 +13,4 @@ func main() {
 	a.Initialize("DB_USERNAME", "DB_PASSWORD", "spy")
 	a.Run(":8080")
 
-
 }

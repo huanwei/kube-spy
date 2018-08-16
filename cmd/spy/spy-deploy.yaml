@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kube-spy
+  #namespace: kube-system
+  labels:
+    name: kube-spy
+spec:
+  selector:
+    matchLabels:
+      name: kube-spy
+  template:
+    metadata:
+      labels:
+        name: kube-spy
+    spec:
+      nodeSelector:
+        spy: "on"
+      containers:
+      - name: kube-spy
+        securityContext:
+          privileged: true
+        image: kube-spy:v0.1
+        imagePullPolicy: IfNotPresent
+        volumeMounts:
+        - name: etckubernetes
+          mountPath: /etc/kubernetes
+        - name: varlibkubelet
+          mountPath: /var/lib/kubelet
+        - name: host-time
+          mountPath: /etc/localtime
+        - name: log
+          mountPath: /tmp
+        - name: config
+          mountPath: /spy
+       # command:
+       # - kube-chaos
+       # - --etcd-endpoint=http://10.96.232.136:6666
+       # - --labelSelector=chaos=open
+       # - --v=4
+      volumes:
+      - name: etckubernetes
+        hostPath:
+          path: /etc/kubernetes
+      - name: varlibkubelet
+        hostPath:
+          path: /var/lib/kubelet
+      - name: host-time
+        hostPath:
+          path: /etc/localtime
+      - name: log
+        hostPath:
+          path: /tmp
+      - name: config
+        configMap:
+          name: spy-config
+          items:
+            - key: spy
+              path: spy.conf
+      #hostNetwork: true
+      #dnsPolicy: ClusterFirstWithHostNet

@@ -1,0 +1,26 @@
+Namespace: "default"
+
+ServiceList:
+  - "httpbin-7bb6ccb769-tql6h"
+
+TestCaseList:
+#  - method: "GET"
+#    url: "/headers"
+#    headers:
+#      Content-Type: "application/json"
+#    body: "{ languages: [ 'Ruby', 'Perl', 'Python', 'c' ] }"
+#  - method: "POST"
+#    url: "/post"
+#    headers:
+#      User-Agent: "macos"
+#    body:
+  - method: "Get"
+    url: "/get"
+    headers:
+
+ChaosList:
+  - ",delay,100ms"
+  - ",delay,200ms"
+  - ",loss,50%"
+
+SyncDuration: "3"

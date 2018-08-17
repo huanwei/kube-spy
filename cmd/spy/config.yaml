@@ -10,16 +10,22 @@ GlobalSettings:
 
 
 TestCaseList:
-  - method: "GET"
-    url: "/headers"
-    headers:
-      Content-Type: "application/aaa"
-    body: "{ languages: [ 'Ruby', 'Perl', 'Python', 'c' ] }"
+#  - method: "GET"
+#    url: "/headers"
+#    headers:
+#      Content-Type: "application/aaa"
+#    body: "{ languages: [ 'Ruby', 'Perl', 'Python', 'c' ] }"
   - method: "POST"
     url: "/post"
     headers:
       User-Agent: "macos"
     body:
+    form:
+      first_name: "Jeevanandam"
+      last_name:  "M"
+    files:
+      1: "/tmp/spy.INFO"
+      2: "/tmp/spy.INFO"
   - method: "Get"
     url: "/get"
     params:

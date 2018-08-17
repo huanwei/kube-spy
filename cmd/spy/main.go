@@ -27,6 +27,9 @@ func main() {
 	// Get API server address
 	host := spy.GetHost(clientset, services[0])
 
+	// Apply global http client settings
+	spy.ConfigHTTPClient(spyConfig)
+
 	glog.Infof("There are %d chaos, %d test case in the list", len(spyConfig.ChaosList), len(spyConfig.TestCaseList))
 
 	// Len(chaos) + 1 tests, first one as normal test

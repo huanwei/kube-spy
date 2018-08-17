@@ -3,26 +3,34 @@ Namespace: "default"
 ServiceList:
   - "httpbin-7bb6ccb769-tql6h"
 
+GlobalSettings:
+  authtoken: "BC594900518B4F7EAC75BD37F019E08FBC594900518B4F7EAC75BD37F019E08F"
+  headers:
+    Content-Type: "application/json"
+
+
 TestCaseList:
-#  - method: "GET"
-#    url: "/headers"
-#    headers:
-#      Content-Type: "application/json"
-#    body: "{ languages: [ 'Ruby', 'Perl', 'Python', 'c' ] }"
-#  - method: "POST"
-#    url: "/post"
-#    headers:
-#      User-Agent: "macos"
-#    body:
+  - method: "GET"
+    url: "/headers"
+    headers:
+      Content-Type: "application/aaa"
+    body: "{ languages: [ 'Ruby', 'Perl', 'Python', 'c' ] }"
+  - method: "POST"
+    url: "/post"
+    headers:
+      User-Agent: "macos"
+    body:
   - method: "Get"
     url: "/get"
+    params:
+      data: "a"
     headers:
+    authtoken: "C6A79608-782F-4ED0-A11D-BD82FAD829CD"
+
 
 ChaosList:
-  - ",delay,100ms"
-  - ",delay,200ms"
-  - ",delay,500ms"
-  - ",loss,50%"
-  - ",loss,100%"
-
-SyncDuration: "5"
+#  - ",delay,100ms"
+#  - ",delay,200ms"
+#  - ",delay,500ms"
+#  - ",loss,50%"
+#  - ",loss,100%"

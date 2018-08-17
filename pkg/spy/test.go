@@ -7,8 +7,8 @@ import (
 )
 
 func ConfigHTTPClient(config *Config) {
+	resty.SetAllowGetMethodPayload(true)
 	resty.SetQueryParams(config.GlobalSettings.Params)
-	resty.SetHeaders(config.GlobalSettings.Headers)
 	resty.SetHeaders(config.GlobalSettings.Headers)
 	resty.SetAuthToken(config.GlobalSettings.Authtoken)
 }
@@ -17,11 +17,16 @@ func DoTest(test TestCase, host string) {
 	// Create request
 	request := resty.R()
 	request.SetQueryParams(test.Params)
+	request.SetMultiValueQueryParams(test.MultiParams)
 	request.SetHeaders(test.Headers)
 	request.SetBody(test.Body)
 	request.SetAuthToken(test.Authtoken)
 	request.SetFormData(test.Form)
-	request.SetFiles(test.Files)
+	request.SetMultiValueFormData(test.MultiForm)
+	if test.Files!=nil{
+		request.SetFiles(test.Files)
+	}
+
 	var response *resty.Response
 
 	glog.Infof("method %s", test.Method)

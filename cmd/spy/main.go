@@ -24,8 +24,13 @@ func main() {
 	// Get services
 	services := spy.GetServices(clientset, spyConfig)
 
+	var host string
 	// Get API server address
-	host := spy.GetHost(clientset, services[0])
+	if spyConfig.APIServerAddr==""{
+		host = spy.GetHost(clientset, services[0])
+	}else{
+		host = spyConfig.APIServerAddr
+	}
 
 	// Apply global http client settings
 	spy.ConfigHTTPClient(spyConfig)

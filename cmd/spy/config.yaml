@@ -1,26 +1,77 @@
+# Your services' namespace in kubernetes
 Namespace: "default"
 
+# Your service list, the first one will be considered the API server
 ServiceList:
   - "httpbin-7bb6ccb769-tql6h"
 
+# This can override the address of the API server to enable out-of-cluster test
+#APIServerAddr: "httpbin.org"
+
+# Every request will carry them, and they can be overridden
+GlobalSettings:
+#  authtoken: "BC594900518B4F7EAC75BD37F019E08FBC594900518B4F7EAC75BD37F019E08F"
+#  headers:
+#    Content-Type: "application/json"
+
+# These test case will be tested in every loop
 TestCaseList:
+# Set request json body and headers
 #  - method: "GET"
 #    url: "/headers"
 #    headers:
 #      Content-Type: "application/json"
 #    body: "{ languages: [ 'Ruby', 'Perl', 'Python', 'c' ] }"
+
+# Set form and files
 #  - method: "POST"
 #    url: "/post"
+#    form:
+#      first_name: "Jeevanandam"
+#      last_name:  "M"
+#    files:
+#      1: "/tmp/spy.INFO"
+#      2: "/tmp/spy.INFO"
+
+
+# Set query params and bare auth
+#  - method: "Get"
+#    url: "/get"
+#    params:
+#      data: "a"
 #    headers:
-#      User-Agent: "macos"
-#    body:
+#    authtoken: "C6A79608-782F-4ED0-A11D-BD82FAD829CD"
+
+# Set multi value form and params
+#  - method: "Post"
+#    url: "/post"
+#    multivalueform:
+#      data:
+#        - "a"
+#        - "b"
+#      text:
+#        - "c"
+#    multivalueparams:
+#      data:
+#        - "a"
+#        - "b"
+#      text:
+#        - "c"
+
+# Set path params
   - method: "Get"
-    url: "/get"
-    headers:
+    url: "/base64/{value}"
+    pathparams:
+      value: "a3ViZS1zcHk="
 
+
+
+
+
+# Set chaos that you want to apply to the services
 ChaosList:
-  - ",delay,100ms"
-  - ",delay,200ms"
-  - ",loss,50%"
-
-SyncDuration: "3"
+#  - ",delay,100ms"
+#  - ",delay,200ms"
+#  - ",delay,500ms"
+#  - ",loss,50%"
+#  - ",loss,100%"

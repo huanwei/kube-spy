@@ -23,10 +23,10 @@ func DoTest(test TestCase, host string) {
 	request.SetAuthToken(test.Authtoken)
 	request.SetFormData(test.Form)
 	request.SetMultiValueFormData(test.MultiForm)
-	if test.PathParams!=nil{
+	if test.PathParams != nil {
 		request.SetPathParams(test.PathParams)
 	}
-	if test.Files!=nil{
+	if test.Files != nil {
 		request.SetFiles(test.Files)
 	}
 

@@ -26,9 +26,9 @@ func main() {
 
 	var host string
 	// Get API server address
-	if spyConfig.APIServerAddr==""{
+	if spyConfig.APIServerAddr == "" {
 		host = spy.GetHost(clientset, services[0])
-	}else{
+	} else {
 		host = spyConfig.APIServerAddr
 	}
 

@@ -21,6 +21,8 @@ TestCaseList:
 ChaosList:
   - ",delay,100ms"
   - ",delay,200ms"
+  - ",delay,500ms"
   - ",loss,50%"
+  - ",loss,100%"
 
-SyncDuration: "3"
+SyncDuration: "5"

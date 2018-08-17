@@ -58,6 +58,12 @@ TestCaseList:
 #      text:
 #        - "c"
 
+# Set path params
+  - method: "Get"
+    url: "/base64/{value}"
+    pathparams:
+      value: "a3ViZS1zcHk="
+
 
 
 

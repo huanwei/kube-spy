@@ -10,6 +10,7 @@ type TestCase struct {
 	MultiForm   map[string][]string `yaml:"multivalueform"`
 	MultiParams map[string][]string `yaml:"multivalueparams"`
 	Files       map[string]string   `yaml:"files"`
+	PathParams  map[string]string   `yaml:"pathparams"`
 	Body        string              `yaml:"body"`
 }
 

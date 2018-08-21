@@ -1,11 +1,34 @@
 #!/usr/bin/env bash
+# arg 1: pod name
 echo " ">/tmp/watch
-time=0.0
-for ((i=1;i<=30;i++));do
-echo "$time s:">>/tmp/watch
-kubectl describe pod http|grep chaos= >>/tmp/watch
-sleep 0.2
-time=$(echo "$time + 0.2"|bc)
+begin=$(date +%s)
+last=""
+count=0
+
+while true;do
+    # get annotation
+    now=$(kubectl describe pod $1|grep chaos= )
+
+    # get time
+    end=$(date +%s)
+    time=`expr $end - $begin`
+
+    # whether newer
+    if [ "$now" != "$last" ];then
+        echo "$time s:">>/tmp/watch
+        echo "$now"  >>/tmp/watch
+        last="$now"
+    fi
+
+    # check end
+    if [ "$now" = "Labels:         chaos=on" ];then
+        count=`expr $count + 1`
+        if test $[count] -gt 5;then break;fi
+    else
+        count=0
+    fi
+
+    sleep 0.1
 done
 
 

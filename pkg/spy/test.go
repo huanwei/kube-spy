@@ -38,6 +38,7 @@ func DoTest(client *resty.Client, test TestCase, host string) {
 	request.SetHeaders(test.Headers)
 	request.SetFormData(test.Form)
 	request.SetMultiValueFormData(test.MultiForm)
+
 	if test.Body != "" {
 		request.SetBody(test.Body)
 	}

@@ -36,3 +36,17 @@ type Config struct {
 	RetryMaxWait   int        `yaml:"retrymaxwait"`
 	Timeout        int        `yaml:"timeout"`
 }
+
+// TODO: APIServerAddr can be a slice in case we do different chaos strategy on multiple Pods within the same one service.
+type SpyConfig struct {
+	NameSpace      string          `yaml:"Namespace"`
+	VictimServices []VictimService `yaml:"VictimServices"`
+}
+
+type VictimService struct {
+	ServiceName    string     `yaml:"ServiceName"`
+	APIServerAddr  []string   `yaml:"APIServerAddr"`
+	TestCaseList   []TestCase `yaml:"TestCaseList"`
+	ChaosList      []string   `yaml:"ChaosList"`
+	GlobalSettings TestCase   `yaml:"GlobalSettings"`
+}

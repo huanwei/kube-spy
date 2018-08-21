@@ -75,8 +75,8 @@ func GetHost(clientset *kubernetes.Clientset, service *v1.Service) string {
 		glog.Infof("Service clusterIP: %s", host)
 	} else {
 		//TODO: other service types
-		// todo: Here v1.ServiceTypeNodePort can be exactly the Pod IP.
-		glog.Infof("not implemented.")
+		glog.Warningf("Unsupported service type: %v",service.Spec.Type)
+
 	}
 	return host
 }

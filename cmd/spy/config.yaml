@@ -3,7 +3,11 @@ Namespace: "default"
 
 # Your service list, the first one will be considered the API server
 ServiceList:
-  - "httpbin-7bb6ccb769-tql6h"
+#  - "httpbin-7bb6ccb769-tql6h"
+  - "http-test-service1"
+  - "http-test-service2"
+  - "http-test-service3"
+
 
 # This can override the address of the API server to enable out-of-cluster test
 #APIServerAddr: "httpbin.org"
@@ -34,7 +38,7 @@ TestCaseList:
 #      2: "/tmp/spy.INFO"
 
 
-# Set query params and bare auth
+# Set query params and bearer auth
 #  - method: "Get"
 #    url: "/get"
 #    params:
@@ -59,19 +63,34 @@ TestCaseList:
 #        - "c"
 
 # Set path params
-  - method: "Get"
-    url: "/base64/{value}"
-    pathparams:
-      value: "a3ViZS1zcHk="
+#  - method: "Get"
+#    url: "/base64/{value}"
+#    pathparams:
+#      value: "a3ViZS1zcHk="
 
-
-
+# Set basic auth
+  - method: "get"
+    url: "/"
+#    basicauth:
+#      username: "root"
+#      password: "123456"
 
 
 # Set chaos that you want to apply to the services
 ChaosList:
-#  - ",delay,100ms"
-#  - ",delay,200ms"
-#  - ",delay,500ms"
-#  - ",loss,50%"
+#  - ""
+  - replica: 1
+    ingress: ",delay,500ms"
+    egress: ",duplicate,10%"
+#  - ",duplicate,40%"
+#  - ",delay,30ms,reorder,50%,25%"
 #  - ",loss,100%"
+#  - "4kbps,delay,10ms"
+#  - "100kbps,corrupt,10%"
+
+# Client retry settings
+retrycount: 0
+# unit: microseconds
+retrywait: 1000
+retrymaxwait: 1000
+timeout: 400

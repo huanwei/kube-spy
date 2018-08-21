@@ -4,6 +4,8 @@ import (
 	"flag"
 	"github.com/golang/glog"
 	"github.com/huanwei/kube-spy/pkg/spy"
+	client_v2 "github.com/influxdata/influxdb/client/v2"
+	"log"
 	"time"
 )
 
@@ -21,19 +23,26 @@ func main() {
 	clientset := spy.GetClientset(kubeconfig)
 	spyConfig := spy.GetConfig()
 
+	c, err := client_v2.NewHTTPClient(client_v2.HTTPConfig{
+		Addr:     "http://192.168.102.238:8086",
+		Username: "kubespy",
+		Password: "kubespy",
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer c.Close()
+
 	// Get services
 	services := spy.GetServices(clientset, spyConfig)
 
 	var host string
 	// Get API server address
-	if spyConfig.APIServerAddr==""{
+	if spyConfig.APIServerAddr == "" {
 		host = spy.GetHost(clientset, services[0])
-	}else{
+	} else {
 		host = spyConfig.APIServerAddr
 	}
-
-	// Apply global http client settings
-	spy.ConfigHTTPClient(spyConfig)
 
 	glog.Infof("There are %d chaos, %d test case in the list", len(spyConfig.ChaosList), len(spyConfig.TestCaseList))
 
@@ -42,18 +51,18 @@ func main() {
 		if i == -1 {
 			// Normal test
 			glog.Infof("Normal test")
-			spy.Dotests(spyConfig.TestCaseList, host)
+			spy.Dotests(spyConfig, host)
 		} else {
 			// Chaos tests
 			for _, chaos := range spyConfig.ChaosList {
-				glog.Infof("Chaos test: %s", chaos)
+				glog.Infof("Chaos test: %v", chaos)
 				// Add chaos
-				err := spy.AddChaos(clientset, spyConfig, services[i], chaos)
+				err := spy.AddChaos(clientset, spyConfig, services[i], &chaos)
 				if err != nil {
 					glog.Errorf("Adding chaos error: %s", err)
 				}
 				// Start test
-				spy.Dotests(spyConfig.TestCaseList, host)
+				spy.Dotests(spyConfig, host)
 				// Clear chaos
 				spy.ClearChaos(clientset, spyConfig)
 			}

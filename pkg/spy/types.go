@@ -1,10 +1,14 @@
 package spy
 
 type TestCase struct {
-	Method      string              `yaml:"method"`
-	URL         string              `yaml:"url"`
-	Params      map[string]string   `yaml:"params"`
-	Authtoken   string              `yaml:"authtoken"`
+	Method    string            `yaml:"method"`
+	URL       string            `yaml:"url"`
+	Params    map[string]string `yaml:"params"`
+	Authtoken string            `yaml:"authtoken"`
+	BasicAuth struct {
+		Username string `yaml:"username"`
+		Password string `yaml:"password"`
+	} `yaml:"basicauth"`
 	Headers     map[string]string   `yaml:"headers"`
 	Form        map[string]string   `yaml:"form"`
 	MultiForm   map[string][]string `yaml:"multivalueform"`
@@ -14,11 +18,21 @@ type TestCase struct {
 	Body        string              `yaml:"body"`
 }
 
+type Chaos struct {
+	Replica int    `yaml:"replica"`
+	Ingress string `yaml:"ingress"`
+	Egress  string `yaml:"egress"`
+}
+
 type Config struct {
 	Namespace      string     `yaml:"Namespace"`
 	ServiceList    []string   `yaml:"ServiceList"`
 	APIServerAddr  string     `yaml:"APIServerAddr"`
 	TestCaseList   []TestCase `yaml:"TestCaseList"`
-	ChaosList      []string   `yaml:"ChaosList"`
+	ChaosList      []Chaos    `yaml:"ChaosList"`
 	GlobalSettings TestCase   `yaml:"GlobalSettings"`
+	RetryCount     int        `yaml:"retrycount"`
+	RetryWait      int        `yaml:"retrywait"`
+	RetryMaxWait   int        `yaml:"retrymaxwait"`
+	Timeout        int        `yaml:"timeout"`
 }

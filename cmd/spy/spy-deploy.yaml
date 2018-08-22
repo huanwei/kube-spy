@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: kube-spy
-  namespace: kube-system
+  namespace: default
   labels:
     name: kube-spy
 spec:

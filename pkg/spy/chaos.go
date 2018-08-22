@@ -40,7 +40,7 @@ func AddChaos(clientset *kubernetes.Clientset, config *Config, service *v1.Servi
 	glog.Infof("%v",pods.Items[0].OwnerReferences)
 	for _,ref:=range pods.Items[0].OwnerReferences{
 		if *ref.Controller{
-			replicaset,err:=clientset.AppsV1().ReplicaSets("kube-system").Get(ref.Name,meta_v1.GetOptions{})
+			replicaset,err:=clientset.AppsV1().ReplicaSets("default").Get(ref.Name,meta_v1.GetOptions{})
 			if err!=nil{
 				glog.Warningf("Fail to find ReplicaSet %s: %s",ref.Name,err)
 			}else {

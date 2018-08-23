@@ -5,7 +5,7 @@ metadata:
   namespace: default
 subjects:
 - kind: User
-  name: "$nodeName"
+  name: "system:node:$nodeName"
   apiGroup: rbac.authorization.k8s.io
 roleRef:
   kind: ClusterRole

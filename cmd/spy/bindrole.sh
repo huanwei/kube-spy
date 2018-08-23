@@ -1,9 +1,3 @@
 #!/usr/bin/env bash
 
-template=`cat ./rolebinding.yaml`
-
-printf "nodeName=\"$1\"\n\
-\ncat << EOF\n$template\nEOF" | bash > ./tmp.yaml
-
-kubectl apply -f tmp.yaml
-rm tmp.yaml
+kubectl create rolebinding spy-view-binding --clusterrole=view --user=system:node:${1} --namespace=default

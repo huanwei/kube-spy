@@ -1,6 +1,6 @@
 FROM alpine
 
-RUN apk add liboping
+RUN apk add iputils
 ADD spy /usr/local/bin/
 
 ENTRYPOINT ["spy"]

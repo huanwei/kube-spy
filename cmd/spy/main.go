@@ -63,6 +63,7 @@ func main() {
 				if err != nil {
 					glog.Errorf("Adding chaos error: %s", err)
 				}
+				return
 				// Start test
 				spy.Dotests(spyConfig, host)
 				//spy.PingPods(cidrs)

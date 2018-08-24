@@ -9,6 +9,9 @@ import (
 	"time"
 	"github.com/huanwei/kube-chaos/pkg/exec"
 	"fmt"
+	"bufio"
+	"bytes"
+	"strings"
 )
 
 //spy program entrypoint
@@ -59,13 +62,18 @@ func main() {
 			for _,cidr := range cidrs{
 				e := exec.New()
 				glog.Infof(fmt.Sprintf("ping"+cidr+"-i"+"0.01"+"-c"+"100"))
-				data,err := e.Command("ping",cidr,"-i","0.01","-c","100").CombinedOutput()
+				data,err := e.Command("ping","-i","0.01","-c","100",cidr).CombinedOutput()
 				if err!= nil{
 					glog.Errorf(fmt.Sprintf("Failed to ping %s:%s",cidr,err))
 				} else {
-					glog.Infof(fmt.Sprintf("%s",data[len(data)-3]))
-					glog.Infof(fmt.Sprintf("%s",data[len(data)-2]))
-					glog.Infof(fmt.Sprintf("%s",data[len(data)-1]))
+					scanner := bufio.NewScanner(bytes.NewBuffer(data))
+					for scanner.Scan() {
+						line := strings.TrimSpace(scanner.Text())
+						if len(line) == 0 {
+							continue
+						}
+						glog.Infof(fmt.Sprintf("%s",line))
+					}
 				}
 			}
 			// Chaos tests

@@ -53,7 +53,7 @@ func main() {
 			glog.Infof("Normal test")
 			spy.Dotests(spyConfig, host)
 		} else {
-			cidrs := spy.GetPod(clientset, services[i])
+			//cidrs := spy.GetPod(clientset, services[i])
 			//spy.PingPods(cidrs)
 			// Chaos tests
 			for _, chaos := range spyConfig.ChaosList {

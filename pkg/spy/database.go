@@ -9,6 +9,7 @@ import (
 
 var DBClient client_v2.Client
 var respBP client_v2.BatchPoints
+var pingBP client_v2.BatchPoints
 
 // Connnect to Database
 func ConnectDB(clientset *kubernetes.Clientset,config *Config) {
@@ -72,6 +73,46 @@ func SendResponses() {
 	DBClient.Write(respBP)
 	// Create new batch
 	respBP, err = client_v2.NewBatchPoints(client_v2.BatchPointsConfig{
+		Database:  "spy",
+		Precision: "ms",
+	})
+	if err != nil {
+		glog.Fatalf("Fail to create points batch: %s", err)
+		panic(err)
+	}
+}
+
+func AddPingResult(url,method,delay,loss string){
+	// Create map
+	tags := make(map[string]string)
+	fileds := make(map[string]interface{})
+
+	// TODO:Set tags and fields here
+	tags["url"]=url
+	tags["method"]=method
+	fileds["delay"] = delay
+	fileds["loss"]=loss
+
+	// Create point
+	point, err := client_v2.NewPoint(
+		"ping",
+		tags,
+		fileds,
+	)
+	if err != nil {
+		glog.Warningf("Fail to create point: %s", err)
+	} else {
+		// Add to batch
+		pingBP.AddPoint(point)
+	}
+}
+
+func SendPingResults() {
+	var err error
+	// Write batch
+	DBClient.Write(pingBP)
+	// Create new batch
+	pingBP, err = client_v2.NewBatchPoints(client_v2.BatchPointsConfig{
 		Database:  "spy",
 		Precision: "ms",
 	})

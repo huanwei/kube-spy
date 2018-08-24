@@ -80,8 +80,8 @@ TestCaseList:
 ChaosList:
 #  - ""
   - replica: 1
-    ingress: ",delay,200ms"
-    egress: ",duplicate,10%"
+    ingress: ",delay,100ms"
+    egress: ",delay,100ms"
 #  - ",duplicate,40%"
 #  - ",delay,30ms,reorder,50%,25%"
 #  - ",loss,100%"
@@ -93,4 +93,4 @@ retrycount: 0
 # unit: microseconds
 retrywait: 1000
 retrymaxwait: 1000
-timeout: 400
+timeout: 500

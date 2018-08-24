@@ -15,12 +15,12 @@ var PodsInChaos []string
 // Add chaos to the service's pods
 func AddChaos(clientset *kubernetes.Clientset, config *Config, service *v1.Service, chaos *Chaos) error {
 	// Find pods' selector
-	labelselector:=""
-	for selectors,values:=range service.Spec.Selector{
-		if labelselector==""{
-			labelselector+=selectors+"="+values
-		}else {
-			labelselector+=","+selectors+"="+values
+	labelselector := ""
+	for selectors, values := range service.Spec.Selector {
+		if labelselector == "" {
+			labelselector += selectors + "=" + values
+		} else {
+			labelselector += "," + selectors + "=" + values
 		}
 	}
 
@@ -31,33 +31,33 @@ func AddChaos(clientset *kubernetes.Clientset, config *Config, service *v1.Servi
 	}
 
 	// Control replicas via their deployment
-	if chaos.Replica!=0{
-		for _, cref :=range pods.Items[0].OwnerReferences{
-			if *cref.Controller{
-				replicaset,err:=clientset.AppsV1().ReplicaSets(config.Namespace).Get(cref.Name,meta_v1.GetOptions{})
-				if err!=nil{
-					glog.Errorf("Fail to find ReplicaSet %s: %s", cref.Name,err)
-				}else {
-					for _,dref:=range replicaset.OwnerReferences{
-						if *dref.Controller{
-							deployment,err :=clientset.AppsV1().Deployments(config.Namespace).Get(dref.Name,meta_v1.GetOptions{})
-							if err!=nil{
-								glog.Errorf("Fail to find Deploymnet %s: %s", cref.Name,err)
-							}else {
-								glog.Infof("Previous replicas: %d",*deployment.Spec.Replicas)
+	if chaos.Replica != 0 {
+		for _, cref := range pods.Items[0].OwnerReferences {
+			if *cref.Controller {
+				replicaset, err := clientset.AppsV1().ReplicaSets(config.Namespace).Get(cref.Name, meta_v1.GetOptions{})
+				if err != nil {
+					glog.Errorf("Fail to find ReplicaSet %s: %s", cref.Name, err)
+				} else {
+					for _, dref := range replicaset.OwnerReferences {
+						if *dref.Controller {
+							deployment, err := clientset.AppsV1().Deployments(config.Namespace).Get(dref.Name, meta_v1.GetOptions{})
+							if err != nil {
+								glog.Errorf("Fail to find Deploymnet %s: %s", cref.Name, err)
+							} else {
+								glog.Infof("Previous replicas: %d", *deployment.Spec.Replicas)
 								var replicas int32
-								replicas=int32(chaos.Replica)
-								deployment.Spec.Replicas=&replicas
+								replicas = int32(chaos.Replica)
+								deployment.Spec.Replicas = &replicas
 
-								_,err:=clientset.AppsV1().Deployments(config.Namespace).Update(deployment.DeepCopy())
-								if err!=nil{
-									glog.Errorf("Scale error: %s",err)
-								}else {
-									deployment,err:=clientset.AppsV1().Deployments(config.Namespace).Get(dref.Name,meta_v1.GetOptions{})
-									if err!=nil{
-										glog.Errorf("Fail to find Deploymnet %s: %s", cref.Name,err)
-									}else {
-										glog.Infof("Deploymnet %s scaled to %d",deployment.Name,*deployment.Spec.Replicas)
+								_, err := clientset.AppsV1().Deployments(config.Namespace).Update(deployment.DeepCopy())
+								if err != nil {
+									glog.Errorf("Scale error: %s", err)
+								} else {
+									deployment, err := clientset.AppsV1().Deployments(config.Namespace).Get(dref.Name, meta_v1.GetOptions{})
+									if err != nil {
+										glog.Errorf("Fail to find Deploymnet %s: %s", cref.Name, err)
+									} else {
+										glog.Infof("Deploymnet %s scaled to %d", deployment.Name, *deployment.Spec.Replicas)
 									}
 								}
 
@@ -68,7 +68,6 @@ func AddChaos(clientset *kubernetes.Clientset, config *Config, service *v1.Servi
 			}
 		}
 	}
-
 
 	// Find all nodes running this service's pods
 	nodes := make(map[string]*v1.Node)
@@ -127,7 +126,7 @@ func AddChaos(clientset *kubernetes.Clientset, config *Config, service *v1.Servi
 	// Wait for response
 	for {
 		allReady := true
-		pods, err := clientset.CoreV1().Pods(config.Namespace).List(meta_v1.ListOptions{LabelSelector:labelselector})
+		pods, err := clientset.CoreV1().Pods(config.Namespace).List(meta_v1.ListOptions{LabelSelector: labelselector})
 		if err != nil {
 			return errors.New(fmt.Sprintf("fail to list service %s's corresponding pods : %s", service.Name, err))
 		}

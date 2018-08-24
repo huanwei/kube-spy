@@ -35,6 +35,7 @@ type Config struct {
 	RetryWait      int        `yaml:"retrywait"`
 	RetryMaxWait   int        `yaml:"retrymaxwait"`
 	Timeout        int        `yaml:"timeout"`
+
 }
 
 // TODO: APIServerAddr can be a slice in case we do different chaos strategy on multiple Pods within the same one service.

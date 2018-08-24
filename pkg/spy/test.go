@@ -4,6 +4,7 @@ import (
 	"github.com/go-resty/resty"
 	"github.com/golang/glog"
 	"time"
+	"fmt"
 )
 
 func ConfigHTTPClient(client *resty.Client, config *Config) {
@@ -96,8 +97,10 @@ func DoTest(client *resty.Client, test TestCase, host string) {
 	// Check potential error
 	if err != nil {
 		glog.Errorf("Response error: %v", err)
+		AddResponse(test.URL,test.Method,err.Error(),fmt.Sprint(response.Time()))
 	} else {
 		glog.Infof("Response Body: %v\nDuration: %v", response, response.Time())
+		AddResponse(test.URL,test.Method,string(response.Body()),fmt.Sprint(response.Time()))
 	}
 	glog.Flush()
 }
@@ -109,4 +112,5 @@ func Dotests(config *Config, host string) {
 	for _, test := range config.TestCaseList {
 		DoTest(client, test, host)
 	}
+	SendResponses()
 }

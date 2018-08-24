@@ -80,7 +80,7 @@ TestCaseList:
 ChaosList:
 #  - ""
   - replica: 1
-    ingress: ",delay,500ms"
+    ingress: ",delay,200ms"
     egress: ",duplicate,10%"
 #  - ",duplicate,40%"
 #  - ",delay,30ms,reorder,50%,25%"

@@ -64,7 +64,7 @@ func main() {
 				glog.Infof(fmt.Sprintf("ping"+cidr+"-i"+"0.01"+"-c"+"100"))
 				data,err := e.Command("ping","-i","0.01","-c","100",cidr).CombinedOutput()
 				if err!= nil{
-					glog.Errorf(fmt.Sprintf("Failed to ping %s:%s",cidr,err))
+					glog.Errorf(fmt.Sprintf("Failed to ping %s:%v",cidr,err.Error()))
 				} else {
 					scanner := bufio.NewScanner(bytes.NewBuffer(data))
 					for scanner.Scan() {

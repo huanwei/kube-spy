@@ -54,7 +54,7 @@ func main() {
 			spy.Dotests(spyConfig, host)
 		} else {
 			cidrs := spy.GetPod(clientset, services[i])
-			spy.PingPods(cidrs)
+			//spy.PingPods(cidrs)
 			// Chaos tests
 			for _, chaos := range spyConfig.ChaosList {
 				glog.Infof("Chaos test: %v", chaos)
@@ -65,11 +65,11 @@ func main() {
 				}
 				// Start test
 				spy.Dotests(spyConfig, host)
-				spy.PingPods(cidrs)
+				//spy.PingPods(cidrs)
 				// Clear chaos
 				spy.ClearChaos(clientset, spyConfig)
 			}
-			spy.PingPods(cidrs)
+			//spy.PingPods(cidrs)
 		}
 
 	}

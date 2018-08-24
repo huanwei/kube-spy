@@ -104,7 +104,7 @@ func GetPod(clientset *kubernetes.Clientset, service *v1.Service) []string {
 func PingPods(cidrs []string)  {
 	for _,cidr := range cidrs{
 		e := exec.New()
-		glog.Infof(fmt.Sprintf("ping"+cidr+"-i"+"0.01"+"-c"+"100"))
+		glog.Infof(fmt.Sprintf("ping "+cidr))
 		data,err := e.Command("ping","-i","0.01","-c","100",cidr).CombinedOutput()
 		if err!= nil{
 			glog.Errorf(fmt.Sprintf("Failed to ping %s:%s",cidr,err))

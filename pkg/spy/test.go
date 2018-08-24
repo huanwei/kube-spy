@@ -95,9 +95,9 @@ func DoTest(client *resty.Client, test TestCase, host string) {
 
 	// Check potential error
 	if err != nil {
-		glog.Infof("\nError: %v", err)
+		glog.Errorf("Response error: %v", err)
 	} else {
-		glog.Infof("\nResponse Body: %v\nDuration: %v", response, response.Time())
+		glog.Infof("Response Body: %v\nDuration: %v", response, response.Time())
 	}
 	glog.Flush()
 }

@@ -46,8 +46,11 @@ func main() {
 
 	glog.Infof("There are %d chaos, %d test case in the list", len(spyConfig.ChaosList), len(spyConfig.TestCaseList))
 
+
+	glog.Infof("len(services)=%d",len(services))
 	// Len(chaos) + 1 tests, first one as normal test
 	for i := -1; i < len(services); i++ {
+		glog.Info("test ",i)
 		if i == -1 {
 			// Normal test
 			glog.Infof("Normal test")

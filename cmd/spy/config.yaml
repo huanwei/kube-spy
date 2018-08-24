@@ -93,4 +93,4 @@ retrycount: 0
 # unit: microseconds
 retrywait: 1000
 retrymaxwait: 1000
-timeout: 400
+timeout: 2000

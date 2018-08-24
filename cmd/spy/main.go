@@ -61,10 +61,10 @@ func main() {
 			cidrs := spy.GetPod(clientset, services[i])
 			for _,cidr := range cidrs{
 				e := exec.New()
-				glog.Infof(fmt.Sprintf("ping"+cidr+"-i"+"0.01"+"-c"+"100"))
-				data,err := e.Command("ping","-i","0.01","-c","100",cidr).CombinedOutput()
+				glog.Infof(fmt.Sprintf("oping"+cidr+"-i"+"0.01"+"-c"+"100"))
+				data,err := e.Command("oping","-i","0.01","-c","100",cidr).CombinedOutput()
 				if err!= nil{
-					glog.Errorf(fmt.Sprintf("Failed to ping %s:%v",cidr,err.Error()))
+					glog.Errorf(fmt.Sprintf("Failed to ping %s:%s",cidr,err))
 				} else {
 					scanner := bufio.NewScanner(bytes.NewBuffer(data))
 					for scanner.Scan() {

@@ -7,6 +7,8 @@ import (
 	client_v2 "github.com/influxdata/influxdb/client/v2"
 	"log"
 	"time"
+	"github.com/huanwei/kube-chaos/pkg/exec"
+	"fmt"
 )
 
 //spy program entrypoint
@@ -53,6 +55,18 @@ func main() {
 			glog.Infof("Normal test")
 			spy.Dotests(spyConfig, host)
 		} else {
+			cidrs := spy.GetPod(clientset, services[i])
+			for _,cidr := range cidrs{
+				e := exec.New()
+				data,err := e.Command("ping",cidr,"-i","0.01","-c","100").CombinedOutput()
+				if err!= nil{
+					glog.Errorf(fmt.Sprintf("Failed to ping %s:%s",cidr,err))
+				} else {
+					glog.Infof(fmt.Sprintf("%s",data[len(data)-3]))
+					glog.Infof(fmt.Sprintf("%s",data[len(data)-2]))
+					glog.Infof(fmt.Sprintf("%s",data[len(data)-1]))
+				}
+			}
 			// Chaos tests
 			for _, chaos := range spyConfig.ChaosList {
 				glog.Infof("Chaos test: %v", chaos)

@@ -9,6 +9,7 @@ import (
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
+	"fmt"
 )
 
 func GetConfig() *Config {
@@ -79,4 +80,20 @@ func GetHost(clientset *kubernetes.Clientset, service *v1.Service) string {
 
 	}
 	return host
+}
+
+func GetPod(clientset *kubernetes.Clientset, service *v1.Service) []string {
+	cidrs := []string{}
+	selector := service.Spec.Selector
+
+	pods ,err := clientset.CoreV1().Pods("").List(meta_v1.ListOptions{LabelSelector:"app="+selector["app"]})
+	if err != nil{
+		glog.Errorf(fmt.Sprintf("Failed to get pods:%s",err))
+		return cidrs
+	}
+	for _,pod := range pods.Items{
+		cidr := fmt.Sprintf("%s", pod.Status.PodIP) //192.168.0.10
+		cidrs = append(cidrs, cidr)
+	}
+	return cidrs
 }

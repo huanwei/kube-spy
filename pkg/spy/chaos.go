@@ -141,7 +141,7 @@ func AddChaos(clientset *kubernetes.Clientset, config *Config, service *v1.Servi
 		if allReady {
 			break
 		}
-		time.Sleep(time.Duration(50 * time.Microsecond))
+		time.Sleep(time.Duration(50 * time.Millisecond))
 	}
 	return nil
 }
@@ -203,7 +203,7 @@ func ClearChaos(clientset *kubernetes.Clientset, config *Config) {
 			if allReady {
 				break
 			}
-			time.Sleep(time.Duration(50 * time.Microsecond))
+			time.Sleep(time.Duration(50 * time.Millisecond))
 		}
 
 		PodsInChaos = nil

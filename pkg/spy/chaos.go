@@ -14,38 +14,57 @@ var PodsInChaos []string
 
 // Add chaos to the service's pods
 func AddChaos(clientset *kubernetes.Clientset, config *Config, service *v1.Service, chaos *Chaos) error {
-	labelselector:=""
-	for selectors,values:=range service.Spec.Selector{
-		if labelselector==""{
-			labelselector+=selectors+"="+values
-		}else {
-			labelselector+=","+selectors+"="+values
+	// Find pods' selector
+	labelselector := ""
+	for selectors, values := range service.Spec.Selector {
+		if labelselector == "" {
+			labelselector += selectors + "=" + values
+		} else {
+			labelselector += "," + selectors + "=" + values
 		}
 	}
-	glog.Infof("labelselector: %s",labelselector)
 
-	//deploy,err:=clientset.AppsV1().Deployments(config.Namespace).Get(service.Name,meta_v1.GetOptions{})
-	//if err!=nil{
-	//	glog.Warningf("Deployment %s: not found: %s",service.Name,err)
-	//}else {
-	//	deploy.Status.Replicas=3
-	//	clientset.AppsV1().Deployments(config.Namespace).UpdateStatus(deploy.DeepCopy())
-	//}
-
+	// Get pods
 	pods, err := clientset.CoreV1().Pods(config.Namespace).List(meta_v1.ListOptions{LabelSelector: labelselector})
 	if err != nil {
 		return errors.New(fmt.Sprintf("fail to list service %s's corresponding pods : %s", service.Name, err))
 	}
 
-	glog.Infof("%v",pods.Items[0].OwnerReferences)
-	for _,ref:=range pods.Items[0].OwnerReferences{
-		if *ref.Controller{
-			replicaset,err:=clientset.AppsV1().ReplicaSets("kube-system").Get(ref.Name,meta_v1.GetOptions{})
-			if err!=nil{
-				glog.Warningf("Fail to find ReplicaSet %s: %s",ref.Name,err)
-			}else {
-				replicaset.Status.Replicas=3
-				clientset.AppsV1().ReplicaSets(config.Namespace).UpdateStatus(replicaset.DeepCopy())
+	// Control replicas via their deployment
+	if chaos.Replica != 0 {
+		for _, cref := range pods.Items[0].OwnerReferences {
+			if *cref.Controller {
+				replicaset, err := clientset.AppsV1().ReplicaSets(config.Namespace).Get(cref.Name, meta_v1.GetOptions{})
+				if err != nil {
+					glog.Errorf("Fail to find ReplicaSet %s: %s", cref.Name, err)
+				} else {
+					for _, dref := range replicaset.OwnerReferences {
+						if *dref.Controller {
+							deployment, err := clientset.AppsV1().Deployments(config.Namespace).Get(dref.Name, meta_v1.GetOptions{})
+							if err != nil {
+								glog.Errorf("Fail to find Deploymnet %s: %s", cref.Name, err)
+							} else {
+								glog.Infof("Previous replicas: %d", *deployment.Spec.Replicas)
+								var replicas int32
+								replicas = int32(chaos.Replica)
+								deployment.Spec.Replicas = &replicas
+
+								_, err := clientset.AppsV1().Deployments(config.Namespace).Update(deployment.DeepCopy())
+								if err != nil {
+									glog.Errorf("Scale error: %s", err)
+								} else {
+									deployment, err := clientset.AppsV1().Deployments(config.Namespace).Get(dref.Name, meta_v1.GetOptions{})
+									if err != nil {
+										glog.Errorf("Fail to find Deploymnet %s: %s", cref.Name, err)
+									} else {
+										glog.Infof("Deploymnet %s scaled to %d", deployment.Name, *deployment.Spec.Replicas)
+									}
+								}
+
+							}
+						}
+					}
+				}
 			}
 		}
 	}
@@ -62,7 +81,7 @@ func AddChaos(clientset *kubernetes.Clientset, config *Config, service *v1.Servi
 			nodes[pod.Spec.NodeName] = node
 		}
 	}
-	glog.Infof("chaos nodes: ")
+
 	// Open these nodes' chaos
 	for name, node := range nodes {
 		glog.Info(name)
@@ -79,10 +98,8 @@ func AddChaos(clientset *kubernetes.Clientset, config *Config, service *v1.Servi
 		}
 	}
 
-	glog.Infof("Got pods:")
 	// Open these pods' chaos
 	for _, pod := range pods.Items {
-		glog.Info(pod.Name)
 		// Set labels
 		newLabels := pod.Labels
 		newLabels["chaos"] = "on"
@@ -109,7 +126,7 @@ func AddChaos(clientset *kubernetes.Clientset, config *Config, service *v1.Servi
 	// Wait for response
 	for {
 		allReady := true
-		pods, err := clientset.CoreV1().Pods(config.Namespace).List(meta_v1.ListOptions{LabelSelector:labelselector})
+		pods, err := clientset.CoreV1().Pods(config.Namespace).List(meta_v1.ListOptions{LabelSelector: labelselector})
 		if err != nil {
 			return errors.New(fmt.Sprintf("fail to list service %s's corresponding pods : %s", service.Name, err))
 		}
@@ -131,6 +148,7 @@ func AddChaos(clientset *kubernetes.Clientset, config *Config, service *v1.Servi
 
 // Clear chaos in the previous influenced pods
 func ClearChaos(clientset *kubernetes.Clientset, config *Config) {
+	// Find previous chaos pods
 	if PodsInChaos != nil {
 		glog.Infof("Clear previous chaos: %s...%d pod(s)", PodsInChaos[0], len(PodsInChaos))
 	} else {
@@ -140,6 +158,8 @@ func ClearChaos(clientset *kubernetes.Clientset, config *Config) {
 		err error
 		pod *v1.Pod
 	)
+
+	// If any
 	if PodsInChaos != nil {
 		for _, podName := range PodsInChaos {
 			pod, err = clientset.CoreV1().Pods(config.Namespace).Get(podName, meta_v1.GetOptions{})

@@ -111,6 +111,12 @@
 			"revisionTime": "2018-03-28T16:39:08Z"
 		},
 		{
+			"checksumSHA1": "KtWttoOB5v1dfoJWe3QpUQFBikE=",
+			"path": "github.com/huanwei/kube-chaos/pkg/exec",
+			"revision": "9fcd324df1da98464c3373b454d55251e29b9a71",
+			"revisionTime": "2018-08-21T12:44:53Z"
+		},
+		{
 			"checksumSHA1": "UVO2SkAXrDSdvDhXjjpR1j/JS7M=",
 			"origin": "k8s.io/client-go/vendor/github.com/imdario/mergo",
 			"path": "github.com/imdario/mergo",

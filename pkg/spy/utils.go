@@ -9,6 +9,10 @@ import (
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
+	"fmt"
+	"bufio"
+	"strings"
+	"github.com/huanwei/kube-chaos/pkg/exec"
 )
 
 func GetConfig() *Config {
@@ -79,4 +83,42 @@ func GetHost(clientset *kubernetes.Clientset, service *v1.Service) string {
 
 	}
 	return host
+}
+
+func GetPod(clientset *kubernetes.Clientset, service *v1.Service) []string {
+	cidrs := []string{}
+	selector := service.Spec.Selector
+
+	pods ,err := clientset.CoreV1().Pods("").List(meta_v1.ListOptions{LabelSelector:"app="+selector["app"]})
+	if err != nil{
+		glog.Errorf(fmt.Sprintf("Failed to get pods:%s",err))
+		return cidrs
+	}
+	for _,pod := range pods.Items{
+		cidr := fmt.Sprintf("%s", pod.Status.PodIP) //192.168.0.10
+		cidrs = append(cidrs, cidr)
+	}
+	return cidrs
+}
+
+func PingPods(cidrs []string)  {
+	for _,cidr := range cidrs{
+		e := exec.New()
+		glog.Infof(fmt.Sprintf("ping "+cidr))
+		data,err := e.Command("ping","-i","0.01","-c","100",cidr).CombinedOutput()
+		if err!= nil{
+			glog.Errorf(fmt.Sprintf("Failed to ping %s:%s",cidr,err))
+		} else {
+			scanner := bufio.NewScanner(bytes.NewBuffer(data))
+			for scanner.Scan() {
+				line := strings.TrimSpace(scanner.Text())
+				if len(line) == 0 {
+					continue
+				}
+				if strings.Contains(line, "transmitted") || strings.Contains(line, "rtt") {
+					glog.Infof(fmt.Sprintf("%s",line))
+				}
+			}
+		}
+	}
 }

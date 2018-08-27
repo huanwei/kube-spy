@@ -1,10 +1,10 @@
 package spy
 
 import (
+	"fmt"
 	"github.com/go-resty/resty"
 	"github.com/golang/glog"
 	"time"
-	"fmt"
 )
 
 func ConfigHTTPClient(client *resty.Client, config *Config) {
@@ -31,7 +31,7 @@ func ConfigHTTPClient(client *resty.Client, config *Config) {
 
 }
 
-func DoTest(service *VictimService,chaos *Chaos, client *resty.Client, test TestCase, host string) {
+func DoTest(client *resty.Client, test TestCase, host string) (error, *resty.Response) {
 	// Create request
 	request := client.R()
 	request.SetQueryParams(test.Params)
@@ -96,13 +96,12 @@ func DoTest(service *VictimService,chaos *Chaos, client *resty.Client, test Test
 
 	// Check potential error
 	if err != nil {
-		glog.Infof("Request fail, Duration: %v",response.Time())
-		AddResponse(service,chaos,test.URL,test.Method,err.Error(),fmt.Sprint(response.Time()))
+		glog.Infof("Request fail, Duration: %v", response.Time())
 	} else {
-		glog.Infof("Request success:\n%s\n Duration: %v",response,response.Time())
-		AddResponse(service,chaos,test.URL,test.Method,string(response.Body()),fmt.Sprint(response.Time()))
+		glog.Infof("Request success:\n%s\n Duration: %v", response, response.Time())
 	}
 	glog.Flush()
+	return err, response
 }
 
 //func NewRestyClient(config *Config)*resty.Client{
@@ -111,11 +110,12 @@ func DoTest(service *VictimService,chaos *Chaos, client *resty.Client, test Test
 //	return client
 //}
 
-func Dotests(config *Config, host string,service *VictimService,chaos *Chaos) {
+func Dotests(config *Config, host string, service *VictimService, chaos *Chaos) {
 	client := resty.New()
 	ConfigHTTPClient(client, config)
 	for _, test := range config.TestCases {
-		DoTest(service,chaos,client, test, host)
+		err, response := DoTest(client, test, host)
+		AddResponse(service, chaos, &test, response, err)
 	}
 	// Send response to db
 	SendResponses()

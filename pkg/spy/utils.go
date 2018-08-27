@@ -56,13 +56,13 @@ func GetClientset(kubeconfig string) *kubernetes.Clientset {
 
 func GetServices(clientset *kubernetes.Clientset, config *Config) []*v1.Service {
 	// Create service array
-	services := make([]*v1.Service, len(config.ServiceList))
+	services := make([]*v1.Service, len(config.VictimServices))
 	var err error
 	// Get services
-	for i, serviceName := range config.ServiceList {
-		services[i], err = clientset.CoreV1().Services(config.Namespace).Get(serviceName, meta_v1.GetOptions{})
+	for i, service := range config.VictimServices {
+		services[i], err = clientset.CoreV1().Services(config.Namespace).Get(service.Name, meta_v1.GetOptions{})
 		if err != nil {
-			glog.Errorf("Fail to get service %s : %s", serviceName, err)
+			glog.Errorf("Fail to get service %s : %s", service.Name, err)
 			glog.Flush()
 			panic(err.Error())
 		}

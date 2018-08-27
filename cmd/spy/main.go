@@ -37,9 +37,8 @@ func main() {
 		host = spyConfig.APIServerAddr
 	}
 
-	glog.Infof("There are %d chaos, %d test case in the list", len(spyConfig.ChaosList), len(spyConfig.TestCaseList))
+	glog.Infof("There are %d services, %d test cases in the list", len(spyConfig.VictimServices), len(spyConfig.TestCases))
 
-	glog.Infof("len(services)=%d", len(services))
 	// Len(chaos) + 1 tests, first one as normal test
 	for i := -1; i < len(services); i++ {
 		glog.Info("test ", i)
@@ -51,7 +50,7 @@ func main() {
 			cidrs := spy.GetPod(clientset, services[i])
 			spy.PingPods(cidrs)
 			// Chaos tests
-			for _, chaos := range spyConfig.ChaosList {
+			for _, chaos := range spyConfig.VictimServices[i].ChaosList {
 				glog.Infof("Chaos test: %v", chaos)
 				// Add chaos
 				err := spy.AddChaos(clientset, spyConfig, services[i], &chaos)

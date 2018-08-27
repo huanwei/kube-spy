@@ -2,24 +2,26 @@
 Namespace: "default"
 
 # Your service list, the first one will be considered the API server
-ServiceList:
-#  - "httpbin-7bb6ccb769-tql6h"
-  - "http-test-service1"
-  - "http-test-service2"
-  - "http-test-service3"
-
+VictimServices:
+- name: "http-test-service1"
+  chaosList:
+  - replica: 1
+    ingress: ",delay,100ms"
+    egress: ",delay,100ms"
+- name: "http-test-service2"
+- name: "http-test-service3"
 
 # This can override the address of the API server to enable out-of-cluster test
 #APIServerAddr: "httpbin.org"
 
 # Every request will carry them, and they can be overridden
-GlobalSettings:
-#  authtoken: "BC594900518B4F7EAC75BD37F019E08FBC594900518B4F7EAC75BD37F019E08F"
+APISetting:
+#  authToken: "BC594900518B4F7EAC75BD37F019E08FBC594900518B4F7EAC75BD37F019E08F"
 #  headers:
 #    Content-Type: "application/json"
 
 # These test case will be tested in every loop
-TestCaseList:
+TestCases:
 # Set request json body and headers
 #  - method: "GET"
 #    url: "/headers"
@@ -44,18 +46,18 @@ TestCaseList:
 #    params:
 #      data: "a"
 #    headers:
-#    authtoken: "C6A79608-782F-4ED0-A11D-BD82FAD829CD"
+#    authToken: "C6A79608-782F-4ED0-A11D-BD82FAD829CD"
 
 # Set multi value form and params
 #  - method: "Post"
 #    url: "/post"
-#    multivalueform:
+#    multiValueForm:
 #      data:
 #        - "a"
 #        - "b"
 #      text:
 #        - "c"
-#    multivalueparams:
+#    multiValueParams:
 #      data:
 #        - "a"
 #        - "b"
@@ -65,32 +67,21 @@ TestCaseList:
 # Set path params
 #  - method: "Get"
 #    url: "/base64/{value}"
-#    pathparams:
+#    pathParams:
 #      value: "a3ViZS1zcHk="
 
 # Set basic auth
-  - method: "get"
-    url: "/"
-#    basicauth:
+- method: "get"
+  url: "/"
+#    basicAuth:
 #      username: "root"
 #      password: "123456"
 
 
-# Set chaos that you want to apply to the services
-ChaosList:
-#  - ""
-  - replica: 1
-    ingress: ",delay,100ms"
-    egress: ",delay,100ms"
-#  - ",duplicate,40%"
-#  - ",delay,30ms,reorder,50%,25%"
-#  - ",loss,100%"
-#  - "4kbps,delay,10ms"
-#  - "100kbps,corrupt,10%"
-
 # Client retry settings
-retrycount: 0
+ClientSetting:
+  retryCount: 0
 # unit: microseconds
-retrywait: 1000
-retrymaxwait: 1000
-timeout: 500
+  retryWait: 1000
+  retryMaxWait: 1000
+  timeout: 500

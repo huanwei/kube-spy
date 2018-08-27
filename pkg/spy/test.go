@@ -9,24 +9,24 @@ import (
 
 func ConfigHTTPClient(client *resty.Client, config *Config) {
 	client.SetAllowGetMethodPayload(true)
-	client.SetQueryParams(config.GlobalSettings.Params)
-	client.SetHeaders(config.GlobalSettings.Headers)
+	client.SetQueryParams(config.APISetting.Params)
+	client.SetHeaders(config.APISetting.Headers)
 
-	if config.GlobalSettings.Authtoken != "" {
-		client.SetAuthToken(config.GlobalSettings.Authtoken)
+	if config.APISetting.AuthToken != "" {
+		client.SetAuthToken(config.APISetting.AuthToken)
 	}
-	if config.GlobalSettings.BasicAuth.Username != "" {
-		client.SetBasicAuth(config.GlobalSettings.BasicAuth.Username, config.GlobalSettings.BasicAuth.Password)
-	}
-
-	if config.RetryCount > 0 {
-		client.SetRetryCount(config.RetryCount)
-		client.SetRetryWaitTime(time.Duration(config.RetryWait) * time.Millisecond)
-		client.SetRetryMaxWaitTime(time.Duration(config.RetryMaxWait) * time.Millisecond)
+	if config.APISetting.BasicAuth.Username != "" {
+		client.SetBasicAuth(config.APISetting.BasicAuth.Username, config.APISetting.BasicAuth.Password)
 	}
 
-	if config.Timeout != 0 {
-		client.SetTimeout(time.Duration(config.Timeout) * time.Millisecond)
+	if config.ClientSetting.RetryCount > 0 {
+		client.SetRetryCount(config.ClientSetting.RetryCount)
+		client.SetRetryWaitTime(time.Duration(config.ClientSetting.RetryWait) * time.Millisecond)
+		client.SetRetryMaxWaitTime(time.Duration(config.ClientSetting.RetryMaxWait) * time.Millisecond)
+	}
+
+	if config.ClientSetting.Timeout != 0 {
+		client.SetTimeout(time.Duration(config.ClientSetting.Timeout) * time.Millisecond)
 	}
 
 }
@@ -43,8 +43,8 @@ func DoTest(client *resty.Client, test TestCase, host string) {
 	if test.Body != "" {
 		request.SetBody(test.Body)
 	}
-	if test.Authtoken != "" {
-		request.SetAuthToken(test.Authtoken)
+	if test.AuthToken != "" {
+		request.SetAuthToken(test.AuthToken)
 	}
 	if test.BasicAuth.Username != "" {
 		request.SetBasicAuth(test.BasicAuth.Username, test.BasicAuth.Password)
@@ -109,7 +109,7 @@ func Dotests(config *Config, host string) {
 	client := resty.New()
 	ConfigHTTPClient(client, config)
 
-	for _, test := range config.TestCaseList {
+	for _, test := range config.TestCases {
 		DoTest(client, test, host)
 	}
 	SendResponses()

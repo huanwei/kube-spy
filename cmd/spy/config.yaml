@@ -84,4 +84,4 @@ ClientSetting:
 # unit: microseconds
   retryWait: 1000
   retryMaxWait: 1000
-  timeout: 500
+  timeout: 3000

@@ -5,6 +5,7 @@ import (
 	client_v2 "github.com/influxdata/influxdb/client/v2"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+	"strconv"
 )
 
 var DBClient client_v2.Client
@@ -45,14 +46,33 @@ func ConnectDB(clientset *kubernetes.Clientset,config *Config) {
 
 }
 
-func AddResponse(url, method, body, duration string) {
+func AddResponse(service *VictimService,chaos *Chaos,url, method, body, duration string) {
 	// Create map
 	tags := make(map[string]string)
 	fileds := make(map[string]interface{})
 
 	// Set tags and fields
+	if service==nil{
+		tags["victim"]="none"
+	}else {
+		tags["victim"]=service.Name
+	}
+
 	tags["url"]=url
 	tags["method"]=method
+	if chaos==nil{
+		fileds["chaos-ingress"]="none"
+		fileds["chaos-egress"]="none"
+		fileds["chaos-replica"]="none"
+	}else{
+		fileds["chaos-ingress"]=chaos.Ingress
+		fileds["chaos-egress"]=chaos.Egress
+		if chaos.Replica==0{
+			fileds["chaos-replica"]="none"
+		}else {
+			fileds["chaos-replica"]=strconv.Itoa(chaos.Replica)
+		}
+	}
 	fileds["body"] = body
 	fileds["duration"]=duration
 
@@ -71,9 +91,11 @@ func AddResponse(url, method, body, duration string) {
 }
 
 func SendResponses() {
-	var err error
 	// Write batch
-	DBClient.Write(respBP)
+	err:=DBClient.Write(respBP)
+	if err!=nil{
+		glog.Errorf("Fail to write to db: %s",err.Error())
+	}
 	// Create new batch
 	respBP, err = client_v2.NewBatchPoints(client_v2.BatchPointsConfig{
 		Database:  "spy",

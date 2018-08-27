@@ -26,8 +26,7 @@ func main() {
 
 	// Connect to DB
 	spy.ConnectDB(clientset,spyConfig)
-	// Close connection when exit
-	defer spy.DBClient.Close()
+
 
 	var host string
 	// Get API server address
@@ -41,24 +40,27 @@ func main() {
 
 	// Len(chaos) + 1 tests, first one as normal test
 	for i := -1; i < len(services); i++ {
-		glog.Info("test ", i)
 		if i == -1 {
 			// Normal test
-			glog.Infof("Normal test")
-			spy.Dotests(spyConfig, host)
+			glog.Infof("None chaos test")
+			spy.Dotests(spyConfig, host,nil,nil)
 		} else {
+			if len(spyConfig.VictimServices[i].ChaosList)==0{
+				continue
+			}
 			cidrs := spy.GetPod(clientset, services[i])
 			spy.PingPods(cidrs)
 			// Chaos tests
 			for _, chaos := range spyConfig.VictimServices[i].ChaosList {
-				glog.Infof("Chaos test: %v", chaos)
+				glog.Infof("Chaos test: Victim %s, Chaos %v", spyConfig.VictimServices[i].Name,chaos)
 				// Add chaos
 				err := spy.AddChaos(clientset, spyConfig, services[i], &chaos)
 				if err != nil {
 					glog.Errorf("Adding chaos error: %s", err)
 				}
-				// Start test
-				spy.Dotests(spyConfig, host)
+				// Do tests
+				spy.Dotests(spyConfig, host,&spyConfig.VictimServices[i],&chaos)
+				// Detect network environment
 				spy.PingPods(cidrs)
 				// Clear chaos
 				spy.ClearChaos(clientset, spyConfig)
@@ -70,6 +72,9 @@ func main() {
 
 	glog.Flush()
 
+
+	// Close connection when exit
+	spy.DBClient.Close()
 	// Wait for terminating
 	for {
 		time.Sleep(time.Duration(10) * time.Second)

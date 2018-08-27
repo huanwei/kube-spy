@@ -17,6 +17,7 @@ func ConnectDB(clientset *kubernetes.Clientset,config *Config) {
 	pods,err:=clientset.CoreV1().Pods(config.Namespace).List(meta_v1.ListOptions{LabelSelector:"name=influxdb-spy"})
 	if err!=nil{
 		glog.Fatalf("Fail to find database pod: %s",err)
+		glog.Flush()
 		panic(err)
 	}
 
@@ -27,6 +28,7 @@ func ConnectDB(clientset *kubernetes.Clientset,config *Config) {
 	})
 	if err != nil {
 		glog.Fatalf("Fail to connect database: %s", err)
+		glog.Flush()
 		panic(err)
 	}
 
@@ -37,6 +39,7 @@ func ConnectDB(clientset *kubernetes.Clientset,config *Config) {
 	})
 	if err != nil {
 		glog.Fatalf("Fail to create points batch: %s", err)
+		glog.Flush()
 		panic(err)
 	}
 
@@ -78,6 +81,7 @@ func SendResponses() {
 	})
 	if err != nil {
 		glog.Fatalf("Fail to create points batch: %s", err)
+		glog.Flush()
 		panic(err)
 	}
 }
@@ -118,6 +122,7 @@ func SendPingResults() {
 	})
 	if err != nil {
 		glog.Fatalf("Fail to create points batch: %s", err)
+		glog.Flush()
 		panic(err)
 	}
 }

@@ -4,7 +4,6 @@ import (
 	"flag"
 	"github.com/golang/glog"
 	"github.com/huanwei/kube-spy/pkg/spy"
-	"time"
 )
 
 //spy program entrypoint
@@ -81,8 +80,8 @@ func main() {
 	// Close connection when exit
 	spy.DBClient.Close()
 	// Wait for terminating
-	for {
-		time.Sleep(time.Duration(10) * time.Second)
-	}
+	//for {
+	//	time.Sleep(time.Duration(10) * time.Second)
+	//}
 
 }

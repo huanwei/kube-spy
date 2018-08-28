@@ -25,52 +25,61 @@ func main() {
 	services := spy.GetServices(clientset, spyConfig)
 
 	// Connect to DB
-	spy.ConnectDB(clientset,spyConfig)
-	// Close connection when exit
-	defer spy.DBClient.Close()
+	spy.ConnectDB(clientset, spyConfig)
 
 	var host string
 	// Get API server address
 	if spyConfig.APIServerAddr == "" {
-		host = spy.GetHost(clientset, services[0])
+		host = services[0].Spec.ClusterIP
 	} else {
 		host = spyConfig.APIServerAddr
 	}
 
-	glog.Infof("There are %d chaos, %d test case in the list", len(spyConfig.ChaosList), len(spyConfig.TestCaseList))
+	glog.Infof("There are %d services, %d test cases in the list", len(spyConfig.VictimServices), len(spyConfig.TestCases))
 
-	glog.Infof("len(services)=%d", len(services))
 	// Len(chaos) + 1 tests, first one as normal test
 	for i := -1; i < len(services); i++ {
-		glog.Info("test ", i)
 		if i == -1 {
 			// Normal test
-			glog.Infof("Normal test")
-			spy.Dotests(spyConfig, host)
+			glog.Infof("None chaos test")
+			spy.Dotests(spyConfig, host, nil, nil)
 		} else {
-			cidrs := spy.GetPod(clientset, services[i])
-			spy.PingPods(cidrs)
+			if len(spyConfig.VictimServices[i].ChaosList) == 0 {
+				continue
+			}
+			// Detect network environment
+			cidrs, podNames := spy.GetPods(clientset, services[i])
+			delay, loss := spy.PingPods(cidrs)
+			spy.StorePingResults(services[i].Name, services[i].Namespace, nil, podNames, delay, loss)
 			// Chaos tests
-			for _, chaos := range spyConfig.ChaosList {
-				glog.Infof("Chaos test: %v", chaos)
+			for _, chaos := range spyConfig.VictimServices[i].ChaosList {
+				glog.Infof("Chaos test: Victim %s, Chaos %v", spyConfig.VictimServices[i].Name, chaos)
 				// Add chaos
 				err := spy.AddChaos(clientset, spyConfig, services[i], &chaos)
 				if err != nil {
 					glog.Errorf("Adding chaos error: %s", err)
 				}
-				// Start test
-				spy.Dotests(spyConfig, host)
-				spy.PingPods(cidrs)
+				// Do tests
+				spy.Dotests(spyConfig, host, &spyConfig.VictimServices[i], &chaos)
+				// Detect network environment
+				cidrs, podNames := spy.GetPods(clientset, services[i])
+				delay, loss := spy.PingPods(cidrs)
+				spy.StorePingResults(services[i].Name, services[i].Namespace, &chaos, podNames, delay, loss)
 				// Clear chaos
 				spy.ClearChaos(clientset, spyConfig)
 			}
-			spy.PingPods(cidrs)
+			// Detect network environment
+			cidrs, podNames = spy.GetPods(clientset, services[i])
+			delay, loss = spy.PingPods(cidrs)
+			spy.StorePingResults(services[i].Name, services[i].Namespace, nil, podNames, delay, loss)
 		}
 
 	}
 
 	glog.Flush()
 
+	// Close connection when exit
+	spy.DBClient.Close()
 	// Wait for terminating
 	for {
 		time.Sleep(time.Duration(10) * time.Second)

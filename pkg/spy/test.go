@@ -4,34 +4,33 @@ import (
 	"github.com/go-resty/resty"
 	"github.com/golang/glog"
 	"time"
-	"fmt"
 )
 
 func ConfigHTTPClient(client *resty.Client, config *Config) {
 	client.SetAllowGetMethodPayload(true)
-	client.SetQueryParams(config.GlobalSettings.Params)
-	client.SetHeaders(config.GlobalSettings.Headers)
+	client.SetQueryParams(config.APISetting.Params)
+	client.SetHeaders(config.APISetting.Headers)
 
-	if config.GlobalSettings.Authtoken != "" {
-		client.SetAuthToken(config.GlobalSettings.Authtoken)
+	if config.APISetting.AuthToken != "" {
+		client.SetAuthToken(config.APISetting.AuthToken)
 	}
-	if config.GlobalSettings.BasicAuth.Username != "" {
-		client.SetBasicAuth(config.GlobalSettings.BasicAuth.Username, config.GlobalSettings.BasicAuth.Password)
-	}
-
-	if config.RetryCount > 0 {
-		client.SetRetryCount(config.RetryCount)
-		client.SetRetryWaitTime(time.Duration(config.RetryWait) * time.Millisecond)
-		client.SetRetryMaxWaitTime(time.Duration(config.RetryMaxWait) * time.Millisecond)
+	if config.APISetting.BasicAuth.Username != "" {
+		client.SetBasicAuth(config.APISetting.BasicAuth.Username, config.APISetting.BasicAuth.Password)
 	}
 
-	if config.Timeout != 0 {
-		client.SetTimeout(time.Duration(config.Timeout) * time.Millisecond)
+	if config.ClientSetting.RetryCount > 0 {
+		client.SetRetryCount(config.ClientSetting.RetryCount)
+		client.SetRetryWaitTime(time.Duration(config.ClientSetting.RetryWait) * time.Millisecond)
+		client.SetRetryMaxWaitTime(time.Duration(config.ClientSetting.RetryMaxWait) * time.Millisecond)
+	}
+
+	if config.ClientSetting.Timeout != 0 {
+		client.SetTimeout(time.Duration(config.ClientSetting.Timeout) * time.Millisecond)
 	}
 
 }
 
-func DoTest(client *resty.Client, test TestCase, host string) {
+func DoTest(client *resty.Client, test TestCase, host string) (error, *resty.Response) {
 	// Create request
 	request := client.R()
 	request.SetQueryParams(test.Params)
@@ -43,8 +42,8 @@ func DoTest(client *resty.Client, test TestCase, host string) {
 	if test.Body != "" {
 		request.SetBody(test.Body)
 	}
-	if test.Authtoken != "" {
-		request.SetAuthToken(test.Authtoken)
+	if test.AuthToken != "" {
+		request.SetAuthToken(test.AuthToken)
 	}
 	if test.BasicAuth.Username != "" {
 		request.SetBasicAuth(test.BasicAuth.Username, test.BasicAuth.Password)
@@ -96,21 +95,27 @@ func DoTest(client *resty.Client, test TestCase, host string) {
 
 	// Check potential error
 	if err != nil {
-		glog.Errorf("Response error: %v", err)
-		AddResponse(test.URL,test.Method,err.Error(),fmt.Sprint(response.Time()))
+		glog.Infof("Request fail, Duration: %v", response.Time())
 	} else {
-		glog.Infof("Response Body: %v\nDuration: %v", response, response.Time())
-		AddResponse(test.URL,test.Method,string(response.Body()),fmt.Sprint(response.Time()))
+		glog.Infof("Request success:\n%s\n Duration: %v", response, response.Time())
 	}
 	glog.Flush()
+	return err, response
 }
 
-func Dotests(config *Config, host string) {
+//func NewRestyClient(config *Config)*resty.Client{
+//	client := resty.New()
+//	ConfigHTTPClient(client, config)
+//	return client
+//}
+
+func Dotests(config *Config, host string, service *VictimService, chaos *Chaos) {
 	client := resty.New()
 	ConfigHTTPClient(client, config)
-
-	for _, test := range config.TestCaseList {
-		DoTest(client, test, host)
+	for _, test := range config.TestCases {
+		err, response := DoTest(client, test, host)
+		AddResponse(service, chaos, &test, response, err)
 	}
+	// Send response to db
 	SendResponses()
 }

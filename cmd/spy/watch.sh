@@ -7,7 +7,7 @@ count=0
 
 while true;do
     # get annotation
-    now=$(kubectl describe pod $1|grep chaos= )
+    now=$(kubectl describe pod http-test|grep chaos= )
 
     # get time
     end=$(date +%s)
@@ -21,9 +21,9 @@ while true;do
     fi
 
     # check end
-    if [ "$now" = "Labels:         chaos=on" ];then
+    if [ "$now" = "$last" ];then
         count=`expr $count + 1`
-        if test $[count] -gt 5;then break;fi
+        if test $[count] -gt 50;then break;fi
     else
         count=0
     fi

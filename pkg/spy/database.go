@@ -46,6 +46,16 @@ func ConnectDB(clientset *kubernetes.Clientset, config *Config) {
 		panic(err)
 	}
 
+	// Create ping points batch
+	pingBP, err = client_v2.NewBatchPoints(client_v2.BatchPointsConfig{
+		Database:  "spy",
+		Precision: "ms",
+	})
+	if err != nil {
+		glog.Fatalf("Fail to create points batch: %s", err)
+		glog.Flush()
+		panic(err)
+	}
 }
 
 func AddResponse(service *VictimService, chaos *Chaos, test *TestCase, response *resty.Response, err error) {
@@ -160,7 +170,10 @@ func AddPingResult(serviceName,namespace string, chaos *Chaos,podName,delay,loss
 func SendPingResults() {
 	var err error
 	// Write batch
-	DBClient.Write(pingBP)
+	err = DBClient.Write(pingBP)
+	if err != nil {
+		glog.Errorf("Fail to write to db: %s", err.Error())
+	}
 	// Create new batch
 	pingBP, err = client_v2.NewBatchPoints(client_v2.BatchPointsConfig{
 		Database:  "spy",

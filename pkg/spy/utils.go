@@ -116,7 +116,7 @@ func PingPods(cidrs []string)  (delay,loss[]string){
 }
 
 func StorePingResults(serviceName,namespace string,chaos *Chaos,podNames,delay,loss []string){
-	for i := 0; i < len(delay); i++{
+	for i,_ := range podNames{
 		AddPingResult(serviceName,namespace,chaos,podNames[i],delay[i],loss[i])
 	}
 	SendPingResults()

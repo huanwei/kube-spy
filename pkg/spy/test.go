@@ -1,7 +1,6 @@
 package spy
 
 import (
-	"fmt"
 	"github.com/go-resty/resty"
 	"github.com/golang/glog"
 	"time"

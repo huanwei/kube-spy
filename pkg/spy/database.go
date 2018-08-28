@@ -50,7 +50,7 @@ func ConnectDB(clientset *kubernetes.Clientset, config *Config) {
 func AddResponse(service *VictimService, chaos *Chaos, test *TestCase, response *resty.Response, err error) {
 	// Create map
 	tags := make(map[string]string)
-	fileds := make(map[string]interface{})
+	fields := make(map[string]interface{})
 
 	// Set tags and fields
 	if service == nil {
@@ -62,32 +62,32 @@ func AddResponse(service *VictimService, chaos *Chaos, test *TestCase, response 
 	tags["method"] = test.Method
 
 	if chaos == nil {
-		fileds["chaos-ingress"] = "none"
-		fileds["chaos-egress"] = "none"
-		fileds["chaos-replica"] = "none"
+		fields["chaos-ingress"] = "none"
+		fields["chaos-egress"] = "none"
+		fields["chaos-replica"] = "none"
 	} else {
-		fileds["chaos-ingress"] = chaos.Ingress
-		fileds["chaos-egress"] = chaos.Egress
+		fields["chaos-ingress"] = chaos.Ingress
+		fields["chaos-egress"] = chaos.Egress
 		if chaos.Replica == 0 {
-			fileds["chaos-replica"] = "none"
+			fields["chaos-replica"] = "none"
 		} else {
-			fileds["chaos-replica"] = strconv.Itoa(chaos.Replica)
+			fields["chaos-replica"] = strconv.Itoa(chaos.Replica)
 		}
 	}
 
 	if err != nil {
-		fileds["body"] = err.Error()
+		fields["body"] = err.Error()
 	} else {
-		fileds["body"] = response.Body()
+		fields["body"] = response.Body()
 	}
 
-	fileds["duration"] = response.Time()
+	fields["duration"] = response.Time()
 
 	// Create point
 	point, err := client_v2.NewPoint(
 		"response",
 		tags,
-		fileds,
+		fields,
 	)
 	if err != nil {
 		glog.Warningf("Fail to create point: %s", err)

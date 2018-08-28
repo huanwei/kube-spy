@@ -220,7 +220,7 @@ func CloseChaos(clientset *kubernetes.Clientset, config *Config) error {
 
 	// Set clear flag on nodes' annotation
 	for _, node := range nodes.Items {
-		glog.V(3).Infof("Clearing chaos on node \"%s\"...",node.Name)
+		glog.V(3).Infof("Clearing chaos on node \"%s\"...", node.Name)
 		newAnnotations := node.Annotations
 		newAnnotations["kubernetes.io/clear-chaos"] = " "
 		node.SetAnnotations(newAnnotations)
@@ -229,5 +229,22 @@ func CloseChaos(clientset *kubernetes.Clientset, config *Config) error {
 			return errors.New(fmt.Sprintf("fail to update node status %s : %s", node.Name, err))
 		}
 	}
+
+	// Wait for all node's chaos to close
+	cnt := 1
+	for {
+		nodes, err = clientset.CoreV1().Nodes().List(meta_v1.ListOptions{LabelSelector: "chaos=on"})
+		if err != nil {
+			return errors.New(fmt.Sprintf("fail to list chaos nodes : %s", err))
+		}
+
+		if len(nodes.Items) == 0 {
+			break
+		}
+		glog.V(3).Infof("Check nodes' chaos, try no. %d", cnt)
+		cnt++
+		time.Sleep(100 * time.Millisecond)
+	}
+
 	return nil
 }

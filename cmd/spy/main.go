@@ -27,7 +27,7 @@ func main() {
 	spy.ConnectDB(clientset, spyConfig)
 
 	// Close all previous chaos
-	spy.CloseChaos(clientset,spyConfig)
+	spy.CloseChaos(clientset, spyConfig)
 
 	var host string
 	// Get API server address

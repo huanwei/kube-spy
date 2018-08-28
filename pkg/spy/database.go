@@ -46,6 +46,17 @@ func ConnectDB(clientset *kubernetes.Clientset, config *Config) {
 		panic(err)
 	}
 
+	// Create ping points batch
+	pingBP, err = client_v2.NewBatchPoints(client_v2.BatchPointsConfig{
+		Database:  "spy",
+		Precision: "ms",
+	})
+	if err != nil {
+		glog.Fatalf("Fail to create points batch: %s", err)
+		glog.Flush()
+		panic(err)
+	}
+
 }
 
 func AddResponse(service *VictimService, chaos *Chaos, test *TestCase, response *resty.Response, err error) {
@@ -118,26 +129,29 @@ func SendResponses() {
 	}
 }
 
-func AddPingResult(serviceName,namespace string, replicas int, ingress,egress,podName,delay,loss string){
+func AddPingResult(serviceName, namespace string, replicas int, ingress, egress, podName, delay, loss string) {
 	// Create map
 	tags := make(map[string]string)
-	fileds := make(map[string]interface{})
+	fields := make(map[string]interface{})
 
-	// TODO:Set tags and fields here
 	tags["serviceName"] = serviceName
-	tags["namespace"]=namespace
-	tags["podName"]=podName
-	fileds["replicas"]=replicas
-	fileds["ingressChaos"]=ingress
-	fileds["egressChaos"]=egress
-	fileds["delay"] = delay
-	fileds["loss"] = loss
+	tags["namespace"] = namespace
+	tags["podName"] = podName
+	if replicas == 0 {
+		fields["replicas"] = "none"
+	} else {
+		fields["replicas"] = strconv.Itoa(replicas)
+	}
+	fields["ingressChaos"] = ingress
+	fields["egressChaos"] = egress
+	fields["delay"] = delay
+	fields["loss"] = loss
 
 	// Create point
 	point, err := client_v2.NewPoint(
 		"ping",
 		tags,
-		fileds,
+		fields,
 	)
 	if err != nil {
 		glog.Warningf("Fail to create point: %s", err)
@@ -148,9 +162,11 @@ func AddPingResult(serviceName,namespace string, replicas int, ingress,egress,po
 }
 
 func SendPingResults() {
-	var err error
 	// Write batch
-	DBClient.Write(pingBP)
+	err := DBClient.Write(pingBP)
+	if err != nil {
+		glog.Errorf("Fail to write database: %s", err)
+	}
 	// Create new batch
 	pingBP, err = client_v2.NewBatchPoints(client_v2.BatchPointsConfig{
 		Database:  "spy",

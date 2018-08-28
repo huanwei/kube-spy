@@ -21,6 +21,7 @@ spec:
         securityContext:
           privileged: true
         image: kube-spy:v0.1
+        args: ["-v=4"]
         imagePullPolicy: IfNotPresent
         volumeMounts:
         - name: etckubernetes

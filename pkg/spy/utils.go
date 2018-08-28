@@ -70,26 +70,6 @@ func GetServices(clientset *kubernetes.Clientset, config *Config) []*v1.Service 
 	return services
 }
 
-// todo: Here service clusterIP is not the Pod IP. And it can be "None" if the service is statefulset headless service.
-//func GetHost(clientset *kubernetes.Clientset, service *v1.Service) string {
-//	var host string
-//	glog.Infof("API service type: %s", service.Spec.Type)
-//	if service.Spec.Type == v1.ServiceTypeClusterIP {
-//		host = service.Spec.ClusterIP
-//		glog.Infof("Service clusterIP: %s", host)
-//	} else if service.Spec.Type == v1.ServiceTypeNodePort {
-//		host = service.Spec.ClusterIP
-//		glog.Infof("Service clusterIP: %s", host)
-//		//host = "127.0.0.1:" + strconv.Itoa(int(service.Spec.Ports[0].NodePort))
-//		//glog.Infof("Service NodePort: %d", service.Spec.Ports[0].NodePort)
-//
-//	} else {
-//		//TODO: other service types
-//		glog.Warningf("Unsupported service type: %v", service.Spec.Type)
-//	}
-//	return host
-//}
-
 func GetPods(clientset *kubernetes.Clientset, service *v1.Service) (cidrs, podNames []string) {
 	selector := service.Spec.Selector
 

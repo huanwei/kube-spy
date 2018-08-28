@@ -30,7 +30,6 @@ func main() {
 	var host string
 	// Get API server address
 	if spyConfig.APIServerAddr == "" {
-		//host = spy.GetHost(clientset, services[0])
 		host = services[0].Spec.ClusterIP
 	} else {
 		host = spyConfig.APIServerAddr

@@ -56,7 +56,6 @@ func ConnectDB(clientset *kubernetes.Clientset, config *Config) {
 		glog.Flush()
 		panic(err)
 	}
-
 }
 
 func AddResponse(service *VictimService, chaos *Chaos, test *TestCase, response *resty.Response, err error) {
@@ -129,7 +128,7 @@ func SendResponses() {
 	}
 }
 
-func AddPingResult(serviceName, namespace string, replicas int, ingress, egress, podName, delay, loss string) {
+func AddPingResult(serviceName, namespace string, chaos *Chaos, podName, delay, loss string) {
 	// Create map
 	tags := make(map[string]string)
 	fields := make(map[string]interface{})
@@ -137,15 +136,22 @@ func AddPingResult(serviceName, namespace string, replicas int, ingress, egress,
 	tags["serviceName"] = serviceName
 	tags["namespace"] = namespace
 	tags["podName"] = podName
-	if replicas == 0 {
-		fields["replicas"] = "none"
-	} else {
-		fields["replicas"] = strconv.Itoa(replicas)
-	}
-	fields["ingressChaos"] = ingress
-	fields["egressChaos"] = egress
 	fields["delay"] = delay
 	fields["loss"] = loss
+
+	if chaos == nil {
+		fields["chaos-ingress"] = "none"
+		fields["chaos-egress"] = "none"
+		fields["chaos-replica"] = "none"
+	} else {
+		fields["chaos-ingress"] = chaos.Ingress
+		fields["chaos-egress"] = chaos.Egress
+		if chaos.Replica == 0 {
+			fields["chaos-replica"] = "none"
+		} else {
+			fields["chaos-replica"] = strconv.Itoa(chaos.Replica)
+		}
+	}
 
 	// Create point
 	point, err := client_v2.NewPoint(
@@ -165,7 +171,7 @@ func SendPingResults() {
 	// Write batch
 	err := DBClient.Write(pingBP)
 	if err != nil {
-		glog.Errorf("Fail to write database: %s", err)
+		glog.Errorf("Fail to write to db: %s", err.Error())
 	}
 	// Create new batch
 	pingBP, err = client_v2.NewBatchPoints(client_v2.BatchPointsConfig{

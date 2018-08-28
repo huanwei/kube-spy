@@ -115,11 +115,9 @@ func PingPods(cidrs []string) (delay, loss []string) {
 	return delay, loss
 }
 
-func StorePingResults(serviceName, namespace string, replicas int, ingress, egress string, podNames, delay, loss []string) {
-	glog.V(4).Infof("len(podNames)=%d,len(delay)=%d,len(loss)=%d", len(podNames), len(delay), len(loss))
-	glog.Flush()
-	for i := 0; i < len(delay); i++ {
-		AddPingResult(serviceName, namespace, replicas, ingress, egress, podNames[i], delay[i], loss[i])
+func StorePingResults(serviceName, namespace string, chaos *Chaos, podNames, delay, loss []string) {
+	for i, _ := range podNames {
+		AddPingResult(serviceName, namespace, chaos, podNames[i], delay[i], loss[i])
 	}
 	SendPingResults()
 }

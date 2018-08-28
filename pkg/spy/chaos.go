@@ -220,6 +220,7 @@ func CloseChaos(clientset *kubernetes.Clientset, config *Config) error {
 
 	// Set clear flag on nodes' annotation
 	for _, node := range nodes.Items {
+		glog.V(3).Infof("Clearing chaos on node \"%s\"...",node.Name)
 		newAnnotations := node.Annotations
 		newAnnotations["kubernetes.io/clear-chaos"] = " "
 		node.SetAnnotations(newAnnotations)

@@ -1,6 +1,7 @@
 package spy
 
 import (
+	"github.com/go-resty/resty"
 	"github.com/golang/glog"
 	client_v2 "github.com/influxdata/influxdb/client/v2"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -13,17 +14,17 @@ var respBP client_v2.BatchPoints
 var pingBP client_v2.BatchPoints
 
 // Connnect to Database
-func ConnectDB(clientset *kubernetes.Clientset,config *Config) {
+func ConnectDB(clientset *kubernetes.Clientset, config *Config) {
 	// Get Database address
-	pods,err:=clientset.CoreV1().Pods(config.Namespace).List(meta_v1.ListOptions{LabelSelector:"name=influxdb-spy"})
-	if err!=nil{
-		glog.Fatalf("Fail to find database pod: %s",err)
+	pods, err := clientset.CoreV1().Pods(config.Namespace).List(meta_v1.ListOptions{LabelSelector: "name=influxdb-spy"})
+	if err != nil {
+		glog.Fatalf("Fail to find database pod: %s", err)
 		glog.Flush()
 		panic(err)
 	}
 
 	DBClient, err = client_v2.NewHTTPClient(client_v2.HTTPConfig{
-		Addr:     "http://"+pods.Items[0].Status.PodIP+":8086",
+		Addr:     "http://" + pods.Items[0].Status.PodIP + ":8086",
 		Username: "kubespy",
 		Password: "kubespy",
 	})
@@ -46,41 +47,47 @@ func ConnectDB(clientset *kubernetes.Clientset,config *Config) {
 
 }
 
-func AddResponse(service *VictimService,chaos *Chaos,url, method, body, duration string) {
+func AddResponse(service *VictimService, chaos *Chaos, test *TestCase, response *resty.Response, err error) {
 	// Create map
 	tags := make(map[string]string)
-	fileds := make(map[string]interface{})
+	fields := make(map[string]interface{})
 
 	// Set tags and fields
-	if service==nil{
-		tags["victim"]="none"
-	}else {
-		tags["victim"]=service.Name
+	if service == nil {
+		tags["victim"] = "none"
+	} else {
+		tags["victim"] = service.Name
 	}
+	tags["url"] = test.URL
+	tags["method"] = test.Method
 
-	tags["url"]=url
-	tags["method"]=method
-	if chaos==nil{
-		fileds["chaos-ingress"]="none"
-		fileds["chaos-egress"]="none"
-		fileds["chaos-replica"]="none"
-	}else{
-		fileds["chaos-ingress"]=chaos.Ingress
-		fileds["chaos-egress"]=chaos.Egress
-		if chaos.Replica==0{
-			fileds["chaos-replica"]="none"
-		}else {
-			fileds["chaos-replica"]=strconv.Itoa(chaos.Replica)
+	if chaos == nil {
+		fields["chaos-ingress"] = "none"
+		fields["chaos-egress"] = "none"
+		fields["chaos-replica"] = "none"
+	} else {
+		fields["chaos-ingress"] = chaos.Ingress
+		fields["chaos-egress"] = chaos.Egress
+		if chaos.Replica == 0 {
+			fields["chaos-replica"] = "none"
+		} else {
+			fields["chaos-replica"] = strconv.Itoa(chaos.Replica)
 		}
 	}
-	fileds["body"] = body
-	fileds["duration"]=duration
+
+	if err != nil {
+		fields["body"] = err.Error()
+	} else {
+		fields["body"] = response.Body()
+	}
+
+	fields["duration"] = response.Time()
 
 	// Create point
 	point, err := client_v2.NewPoint(
 		"response",
 		tags,
-		fileds,
+		fields,
 	)
 	if err != nil {
 		glog.Warningf("Fail to create point: %s", err)
@@ -92,9 +99,9 @@ func AddResponse(service *VictimService,chaos *Chaos,url, method, body, duration
 
 func SendResponses() {
 	// Write batch
-	err:=DBClient.Write(respBP)
-	if err!=nil{
-		glog.Errorf("Fail to write to db: %s",err.Error())
+	err := DBClient.Write(respBP)
+	if err != nil {
+		glog.Errorf("Fail to write to db: %s", err.Error())
 	}
 	// Create new batch
 	respBP, err = client_v2.NewBatchPoints(client_v2.BatchPointsConfig{
@@ -121,7 +128,7 @@ func AddPingResult(serviceName,namespace string, replicas int, ingress,egress,po
 	fileds["ingressChaos"]=ingress
 	fileds["egressChaos"]=egress
 	fileds["delay"] = delay
-	fileds["loss"]=loss
+	fileds["loss"] = loss
 
 	// Create point
 	point, err := client_v2.NewPoint(

@@ -103,12 +103,6 @@ func DoTest(client *resty.Client, test TestCase, host string) (error, *resty.Res
 	return err, response
 }
 
-//func NewRestyClient(config *Config)*resty.Client{
-//	client := resty.New()
-//	ConfigHTTPClient(client, config)
-//	return client
-//}
-
 func Dotests(config *Config, host string, service *VictimService, chaos *Chaos) {
 	client := resty.New()
 	ConfigHTTPClient(client, config)

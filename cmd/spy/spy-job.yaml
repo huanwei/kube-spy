@@ -1,14 +1,14 @@
-apiVersion: apps/v1
-kind: Deployment
+apiVersion: batch/v1
+kind: Job
 metadata:
   name: kube-spy
   namespace: default
   labels:
     name: kube-spy
 spec:
-  selector:
-    matchLabels:
-      name: kube-spy
+#  selector:
+#    matchLabels:
+#      name: kube-spy
   template:
     metadata:
       labels:
@@ -16,11 +16,13 @@ spec:
     spec:
       nodeSelector:
         spy: "on"
+      restartPolicy: OnFailure
       containers:
       - name: kube-spy
         securityContext:
           privileged: true
         image: kube-spy:v0.1
+        args: ["-v=3"]
         imagePullPolicy: IfNotPresent
         volumeMounts:
         - name: etckubernetes

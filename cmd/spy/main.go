@@ -4,7 +4,6 @@ import (
 	"flag"
 	"github.com/golang/glog"
 	"github.com/huanwei/kube-spy/pkg/spy"
-	"time"
 )
 
 //spy program entrypoint
@@ -27,6 +26,9 @@ func main() {
 	// Connect to DB
 	spy.ConnectDB(clientset, spyConfig)
 
+	// Close all previous chaos
+	spy.CloseChaos(clientset, spyConfig)
+
 	var host string
 	// Get API server address
 	if spyConfig.APIServerAddr == "" {
@@ -44,11 +46,12 @@ func main() {
 			glog.Infof("None chaos test")
 			spy.Dotests(spyConfig, host, nil, nil)
 		} else {
+			// No chaos for this service, skip
 			if len(spyConfig.VictimServices[i].ChaosList) == 0 {
 				continue
 			}
 			// Detect network environment
-			cidrs, podNames := spy.GetPods(clientset, services[i])
+			cidrs, podNames := spy.GetPodsInfo(spy.GetPods(clientset, services[i]))
 			delay, loss := spy.PingPods(cidrs)
 			spy.StorePingResults(services[i].Name, services[i].Namespace, nil, podNames, delay, loss)
 			// Chaos tests
@@ -62,14 +65,14 @@ func main() {
 				// Do tests
 				spy.Dotests(spyConfig, host, &spyConfig.VictimServices[i], &chaos)
 				// Detect network environment
-				cidrs, podNames := spy.GetPods(clientset, services[i])
+				cidrs, podNames := spy.GetPodsInfo(spy.GetPods(clientset, services[i]))
 				delay, loss := spy.PingPods(cidrs)
 				spy.StorePingResults(services[i].Name, services[i].Namespace, &chaos, podNames, delay, loss)
 				// Clear chaos
 				spy.ClearChaos(clientset, spyConfig)
 			}
 			// Detect network environment
-			cidrs, podNames = spy.GetPods(clientset, services[i])
+			cidrs, podNames = spy.GetPodsInfo(spy.GetPods(clientset, services[i]))
 			delay, loss = spy.PingPods(cidrs)
 			spy.StorePingResults(services[i].Name, services[i].Namespace, nil, podNames, delay, loss)
 		}
@@ -81,8 +84,8 @@ func main() {
 	// Close connection when exit
 	spy.DBClient.Close()
 	// Wait for terminating
-	for {
-		time.Sleep(time.Duration(10) * time.Second)
-	}
+	//for {
+	//	time.Sleep(time.Duration(10) * time.Second)
+	//}
 
 }

@@ -8,6 +8,7 @@ import (
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"strconv"
+	"time"
 )
 
 var DBClient client_v2.Client
@@ -101,6 +102,7 @@ func AddResponse(service *VictimService, chaos *Chaos, test *TestCase, response 
 		"response",
 		tags,
 		fields,
+		time.Now(),
 	)
 	if err != nil {
 		glog.Warningf("Fail to create point: %s", err)
@@ -158,6 +160,7 @@ func AddPingResult(serviceName, namespace string, chaos *Chaos, podName, delay, 
 		"ping",
 		tags,
 		fields,
+		time.Now(),
 	)
 	if err != nil {
 		glog.Warningf("Fail to create point: %s", err)
@@ -168,9 +171,8 @@ func AddPingResult(serviceName, namespace string, chaos *Chaos, podName, delay, 
 }
 
 func SendPingResults() {
-	var err error
 	// Write batch
-	err = DBClient.Write(pingBP)
+	err := DBClient.Write(pingBP)
 	if err != nil {
 		glog.Errorf("Fail to write to db: %s", err.Error())
 	}

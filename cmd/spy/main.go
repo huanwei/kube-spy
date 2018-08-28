@@ -16,12 +16,17 @@ func main() {
 	flag.StringVar(&kubeconfig, "kubeconfig", "/etc/kubernetes/kubelet.conf", "absolute path to the kubeconfig file")
 	flag.Parse()
 
+	defer glog.Flush()
+
 	// Configure k8s API client and get spy config
 	clientset := spy.GetClientset(kubeconfig)
 	spyConfig := spy.GetConfig()
 
 	// Get services
 	services := spy.GetServices(clientset, spyConfig)
+
+	// Close connection when exit
+	defer spy.DBClient.Close()
 
 	// Connect to DB
 	spy.ConnectDB(clientset, spyConfig)
@@ -77,10 +82,9 @@ func main() {
 
 	}
 
-	glog.Flush()
 
-	// Close connection when exit
-	spy.DBClient.Close()
+
+
 	// Wait for terminating
 	//for {
 	//	time.Sleep(time.Duration(10) * time.Second)

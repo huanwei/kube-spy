@@ -118,14 +118,18 @@ func SendResponses() {
 	}
 }
 
-func AddPingResult(url, method, delay, loss string) {
+func AddPingResult(serviceName,namespace string, replicas int, ingress,egress,podName,delay,loss string){
 	// Create map
 	tags := make(map[string]string)
 	fileds := make(map[string]interface{})
 
 	// TODO:Set tags and fields here
-	tags["url"] = url
-	tags["method"] = method
+	tags["serviceName"] = serviceName
+	tags["namespace"]=namespace
+	tags["podName"]=podName
+	fileds["replicas"]=replicas
+	fileds["ingressChaos"]=ingress
+	fileds["egressChaos"]=egress
 	fileds["delay"] = delay
 	fileds["loss"] = loss
 

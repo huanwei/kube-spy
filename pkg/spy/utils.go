@@ -73,20 +73,20 @@ func GetServices(clientset *kubernetes.Clientset, config *Config) []*v1.Service 
 func GetPods(clientset *kubernetes.Clientset, service *v1.Service) (cidrs, podNames []string) {
 	selector := service.Spec.Selector
 
-	pods ,err := clientset.CoreV1().Pods("").List(meta_v1.ListOptions{LabelSelector:"app="+selector["app"]})
-	if err != nil{
-		glog.Errorf(fmt.Sprintf("Failed to get pods:%s",err))
-		return cidrs,podNames
+	pods, err := clientset.CoreV1().Pods("").List(meta_v1.ListOptions{LabelSelector: "app=" + selector["app"]})
+	if err != nil {
+		glog.Errorf(fmt.Sprintf("Failed to get pods:%s", err))
+		return cidrs, podNames
 	}
-	for _,pod := range pods.Items{
+	for _, pod := range pods.Items {
 		cidrs = append(cidrs, pod.Status.PodIP)
 		podNames = append(podNames, pod.Name)
 	}
-	return cidrs,podNames
+	return cidrs, podNames
 }
 
-func PingPods(cidrs []string)  (delay,loss[]string){
-	for _,cidr := range cidrs{
+func PingPods(cidrs []string) (delay, loss []string) {
+	for _, cidr := range cidrs {
 		e := exec.New()
 		glog.Infof(fmt.Sprintf("ping " + cidr))
 		data, err := e.Command("ping", "-i", "0.01", "-c", "100", cidr).CombinedOutput()
@@ -100,24 +100,24 @@ func PingPods(cidrs []string)  (delay,loss[]string){
 					continue
 				}
 				if strings.Contains(line, "transmitted") {
-					glog.Infof(fmt.Sprintf("%s",line))
+					glog.Infof(fmt.Sprintf("%s", line))
 					parts := strings.Split(line, " ")
-					percent := strings.Split(parts[5],"!")[0]
+					percent := strings.Split(parts[5], "!")[0]
 					loss = append(loss, percent)
 				}
 				if strings.Contains(line, "rtt") {
-					glog.Infof(fmt.Sprintf("%s",line))
+					glog.Infof(fmt.Sprintf("%s", line))
 					delay = append(delay, line)
 				}
 			}
 		}
 	}
-	return delay,loss
+	return delay, loss
 }
 
-func StorePingResults(serviceName,namespace string,chaos *Chaos,podNames,delay,loss []string){
-	for i,_ := range podNames{
-		AddPingResult(serviceName,namespace,chaos,podNames[i],delay[i],loss[i])
+func StorePingResults(serviceName, namespace string, chaos *Chaos, podNames, delay, loss []string) {
+	for i, _ := range podNames {
+		AddPingResult(serviceName, namespace, chaos, podNames[i], delay[i], loss[i])
 	}
 	SendPingResults()
 }

@@ -202,36 +202,37 @@ func ChangeReplicas(clientset *kubernetes.Clientset,pods *v1.PodList,replica int
 
 	if replica != 0 {
 		for _, cref := range pods.Items[0].OwnerReferences {
-			if *cref.Controller {
-				replicaset, err := clientset.AppsV1().ReplicaSets(namespace).Get(cref.Name, meta_v1.GetOptions{})
-				if err != nil {
-					glog.Errorf("Fail to find ReplicaSet %s: %s", cref.Name, err)
-				} else {
-					for _, dref := range replicaset.OwnerReferences {
-						if *dref.Controller {
-							deployment, err := clientset.AppsV1().Deployments(namespace).Get(dref.Name, meta_v1.GetOptions{})
-							if err != nil {
-								glog.Errorf("Fail to find Deploymnet %s: %s", cref.Name, err)
-							} else {
-								glog.Infof("Previous replicas: %d", *deployment.Spec.Replicas)
-								deployment.Spec.Replicas = &replica
-
-								_, err := clientset.AppsV1().Deployments(namespace).Update(deployment.DeepCopy())
-								if err != nil {
-									glog.Errorf("Scale error: %s", err)
-								} else {
-									deployment, err := clientset.AppsV1().Deployments(namespace).Get(dref.Name, meta_v1.GetOptions{})
-									if err != nil {
-										glog.Errorf("Fail to find Deploymnet %s: %s", cref.Name, err)
-									} else {
-										glog.Infof("Deploymnet %s scaled to %d", deployment.Name, *deployment.Spec.Replicas)
-									}
-								}
-
-							}
-						}
-					}
+			if !*cref.Controller {
+				continue
+			}
+			replicaSet, err := clientset.AppsV1().ReplicaSets(namespace).Get(cref.Name, meta_v1.GetOptions{})
+			if err != nil {
+				glog.Errorf("Fail to find ReplicaSet %s: %s", cref.Name, err)
+				continue
+			}
+			for _, dref := range replicaSet.OwnerReferences {
+				if !*dref.Controller {
+					continue
 				}
+				deployment, err := clientset.AppsV1().Deployments(namespace).Get(dref.Name, meta_v1.GetOptions{})
+				if err != nil {
+					glog.Errorf("Fail to find Deploymnet %s: %s", cref.Name, err)
+					continue
+				}
+				glog.Infof("Previous replicas: %d", *deployment.Spec.Replicas)
+				deployment.Spec.Replicas = &replica
+
+				_, err = clientset.AppsV1().Deployments(namespace).Update(deployment.DeepCopy())
+				if err != nil {
+					glog.Errorf("Scale error: %s", err)
+					continue
+				}
+				deployment, err = clientset.AppsV1().Deployments(namespace).Get(dref.Name, meta_v1.GetOptions{})
+				if err != nil {
+					glog.Errorf("Fail to find Deploymnet %s: %s", cref.Name, err)
+					continue
+				}
+				glog.Infof("Deploymnet %s scaled to %d", deployment.Name, *deployment.Spec.Replicas)
 			}
 		}
 	}

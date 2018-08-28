@@ -30,44 +30,8 @@ func AddChaos(clientset *kubernetes.Clientset, config *Config, service *v1.Servi
 		return errors.New(fmt.Sprintf("fail to list service %s's corresponding pods : %s", service.Name, err))
 	}
 
-	// Control replicas via their deployment
-	if chaos.Replica != 0 {
-		for _, cref := range pods.Items[0].OwnerReferences {
-			if *cref.Controller {
-				replicaset, err := clientset.AppsV1().ReplicaSets(config.Namespace).Get(cref.Name, meta_v1.GetOptions{})
-				if err != nil {
-					glog.Errorf("Fail to find ReplicaSet %s: %s", cref.Name, err)
-				} else {
-					for _, dref := range replicaset.OwnerReferences {
-						if *dref.Controller {
-							deployment, err := clientset.AppsV1().Deployments(config.Namespace).Get(dref.Name, meta_v1.GetOptions{})
-							if err != nil {
-								glog.Errorf("Fail to find Deploymnet %s: %s", cref.Name, err)
-							} else {
-								glog.Infof("Previous replicas: %d", *deployment.Spec.Replicas)
-								var replicas int32
-								replicas = int32(chaos.Replica)
-								deployment.Spec.Replicas = &replicas
-
-								_, err := clientset.AppsV1().Deployments(config.Namespace).Update(deployment.DeepCopy())
-								if err != nil {
-									glog.Errorf("Scale error: %s", err)
-								} else {
-									deployment, err := clientset.AppsV1().Deployments(config.Namespace).Get(dref.Name, meta_v1.GetOptions{})
-									if err != nil {
-										glog.Errorf("Fail to find Deploymnet %s: %s", cref.Name, err)
-									} else {
-										glog.Infof("Deploymnet %s scaled to %d", deployment.Name, *deployment.Spec.Replicas)
-									}
-								}
-
-							}
-						}
-					}
-				}
-			}
-		}
-	}
+	// Control replicas
+	ChangeReplicas(clientset,pods,int32(chaos.Replica),config.Namespace)
 
 	// Find all nodes running this service's pods
 	nodes := make(map[string]*v1.Node)
@@ -247,4 +211,44 @@ func CloseChaos(clientset *kubernetes.Clientset, config *Config) error {
 	}
 
 	return nil
+}
+
+// Control replicas via their deployment
+func ChangeReplicas(clientset *kubernetes.Clientset,pods *v1.PodList,replica int32,namespace string){
+
+	if replica != 0 {
+		for _, cref := range pods.Items[0].OwnerReferences {
+			if *cref.Controller {
+				replicaset, err := clientset.AppsV1().ReplicaSets(namespace).Get(cref.Name, meta_v1.GetOptions{})
+				if err != nil {
+					glog.Errorf("Fail to find ReplicaSet %s: %s", cref.Name, err)
+				} else {
+					for _, dref := range replicaset.OwnerReferences {
+						if *dref.Controller {
+							deployment, err := clientset.AppsV1().Deployments(namespace).Get(dref.Name, meta_v1.GetOptions{})
+							if err != nil {
+								glog.Errorf("Fail to find Deploymnet %s: %s", cref.Name, err)
+							} else {
+								glog.Infof("Previous replicas: %d", *deployment.Spec.Replicas)
+								deployment.Spec.Replicas = &replica
+
+								_, err := clientset.AppsV1().Deployments(namespace).Update(deployment.DeepCopy())
+								if err != nil {
+									glog.Errorf("Scale error: %s", err)
+								} else {
+									deployment, err := clientset.AppsV1().Deployments(namespace).Get(dref.Name, meta_v1.GetOptions{})
+									if err != nil {
+										glog.Errorf("Fail to find Deploymnet %s: %s", cref.Name, err)
+									} else {
+										glog.Infof("Deploymnet %s scaled to %d", deployment.Name, *deployment.Spec.Replicas)
+									}
+								}
+
+							}
+						}
+					}
+				}
+			}
+		}
+	}
 }

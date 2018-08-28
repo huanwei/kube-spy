@@ -135,9 +135,9 @@ func PingPods(cidrs []string)  (delay,loss[]string){
 	return delay,loss
 }
 
-func StorePingResults(serviceName,namespace string, replicas int, ingress,egress string,podNames,delay,loss []string){
+func StorePingResults(serviceName,namespace string,chaos *Chaos,podNames,delay,loss []string){
 	for i := 0; i < len(delay); i++{
-		AddPingResult(serviceName,namespace,replicas,ingress,egress,podNames[i],delay[i],loss[i])
+		AddPingResult(serviceName,namespace,chaos,podNames[i],delay[i],loss[i])
 	}
 	SendPingResults()
 }

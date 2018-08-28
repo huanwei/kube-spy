@@ -115,26 +115,36 @@ func SendResponses() {
 	}
 }
 
-func AddPingResult(serviceName,namespace string, replicas int, ingress,egress,podName,delay,loss string){
+func AddPingResult(serviceName,namespace string, chaos *Chaos,podName,delay,loss string){
 	// Create map
 	tags := make(map[string]string)
-	fileds := make(map[string]interface{})
+	fields := make(map[string]interface{})
 
-	// TODO:Set tags and fields here
 	tags["serviceName"] = serviceName
 	tags["namespace"]=namespace
 	tags["podName"]=podName
-	fileds["replicas"]=replicas
-	fileds["ingressChaos"]=ingress
-	fileds["egressChaos"]=egress
-	fileds["delay"] = delay
-	fileds["loss"] = loss
+	fields["delay"] = delay
+	fields["loss"] = loss
+
+	if chaos == nil {
+		fields["chaos-ingress"] = "none"
+		fields["chaos-egress"] = "none"
+		fields["chaos-replica"] = "none"
+	} else {
+		fields["chaos-ingress"] = chaos.Ingress
+		fields["chaos-egress"] = chaos.Egress
+		if chaos.Replica == 0 {
+			fields["chaos-replica"] = "none"
+		} else {
+			fields["chaos-replica"] = strconv.Itoa(chaos.Replica)
+		}
+	}
 
 	// Create point
 	point, err := client_v2.NewPoint(
 		"ping",
 		tags,
-		fileds,
+		fields,
 	)
 	if err != nil {
 		glog.Warningf("Fail to create point: %s", err)

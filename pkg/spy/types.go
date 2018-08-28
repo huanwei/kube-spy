@@ -4,17 +4,17 @@ type TestCase struct {
 	Method    string            `yaml:"method"`
 	URL       string            `yaml:"url"`
 	Params    map[string]string `yaml:"params"`
-	Authtoken string            `yaml:"authtoken"`
+	AuthToken string            `yaml:"authToken"`
 	BasicAuth struct {
 		Username string `yaml:"username"`
 		Password string `yaml:"password"`
-	} `yaml:"basicauth"`
+	} `yaml:"basicAuth"`
 	Headers     map[string]string   `yaml:"headers"`
 	Form        map[string]string   `yaml:"form"`
-	MultiForm   map[string][]string `yaml:"multivalueform"`
-	MultiParams map[string][]string `yaml:"multivalueparams"`
+	MultiForm   map[string][]string `yaml:"multiValueForm"`
+	MultiParams map[string][]string `yaml:"multiValueParams"`
 	Files       map[string]string   `yaml:"files"`
-	PathParams  map[string]string   `yaml:"pathparams"`
+	PathParams  map[string]string   `yaml:"pathParams"`
 	Body        string              `yaml:"body"`
 }
 
@@ -24,30 +24,23 @@ type Chaos struct {
 	Egress  string `yaml:"egress"`
 }
 
-type Config struct {
-	Namespace      string     `yaml:"Namespace"`
-	ServiceList    []string   `yaml:"ServiceList"`
-	APIServerAddr  string     `yaml:"APIServerAddr"`
-	TestCaseList   []TestCase `yaml:"TestCaseList"`
-	ChaosList      []Chaos    `yaml:"ChaosList"`
-	GlobalSettings TestCase   `yaml:"GlobalSettings"`
-	RetryCount     int        `yaml:"retrycount"`
-	RetryWait      int        `yaml:"retrywait"`
-	RetryMaxWait   int        `yaml:"retrymaxwait"`
-	Timeout        int        `yaml:"timeout"`
-
-}
-
-// TODO: APIServerAddr can be a slice in case we do different chaos strategy on multiple Pods within the same one service.
-type SpyConfig struct {
-	NameSpace      string          `yaml:"Namespace"`
-	VictimServices []VictimService `yaml:"VictimServices"`
+type ClientSetting struct {
+	RetryCount   int `yaml:"retryCount"`
+	RetryWait    int `yaml:"retryWait"`
+	RetryMaxWait int `yaml:"retryMaxWait"`
+	Timeout      int `yaml:"timeout"`
 }
 
 type VictimService struct {
-	ServiceName    string     `yaml:"ServiceName"`
-	APIServerAddr  []string   `yaml:"APIServerAddr"`
-	TestCaseList   []TestCase `yaml:"TestCaseList"`
-	ChaosList      []string   `yaml:"ChaosList"`
-	GlobalSettings TestCase   `yaml:"GlobalSettings"`
+	Name      string  `yaml:"name"`
+	ChaosList []Chaos `yaml:"chaosList"`
+}
+
+type Config struct {
+	Namespace      string          `yaml:"Namespace"`
+	VictimServices []VictimService `yaml:"VictimServices"`
+	APIServerAddr  string          `yaml:"APIServerAddr"`
+	APISetting     TestCase        `yaml:"APISettings"`
+	TestCases      []TestCase      `yaml:"TestCases"`
+	ClientSetting  ClientSetting   `yaml:"ClientSetting"`
 }

@@ -14,57 +14,44 @@ var PodsInChaos []string
 
 // Add chaos to the service's pods
 func AddChaos(clientset *kubernetes.Clientset, config *Config, service *v1.Service, chaos *Chaos) error {
-	// Find pods' selector
-	labelselector := ""
-	for selectors, values := range service.Spec.Selector {
-		if labelselector == "" {
-			labelselector += selectors + "=" + values
-		} else {
-			labelselector += "," + selectors + "=" + values
-		}
-	}
-
-	// Get pods
-	pods, err := clientset.CoreV1().Pods(config.Namespace).List(meta_v1.ListOptions{LabelSelector: labelselector})
-	if err != nil {
-		return errors.New(fmt.Sprintf("fail to list service %s's corresponding pods : %s", service.Name, err))
-	}
+	pods := GetPods(clientset, service)
 
 	// Control replicas via their deployment
 	if chaos.Replica != 0 {
 		for _, cref := range pods.Items[0].OwnerReferences {
-			if *cref.Controller {
-				replicaset, err := clientset.AppsV1().ReplicaSets(config.Namespace).Get(cref.Name, meta_v1.GetOptions{})
-				if err != nil {
-					glog.Errorf("Fail to find ReplicaSet %s: %s", cref.Name, err)
-				} else {
-					for _, dref := range replicaset.OwnerReferences {
-						if *dref.Controller {
-							deployment, err := clientset.AppsV1().Deployments(config.Namespace).Get(dref.Name, meta_v1.GetOptions{})
-							if err != nil {
-								glog.Errorf("Fail to find Deploymnet %s: %s", cref.Name, err)
-							} else {
-								glog.Infof("Previous replicas: %d", *deployment.Spec.Replicas)
-								var replicas int32
-								replicas = int32(chaos.Replica)
-								deployment.Spec.Replicas = &replicas
-
-								_, err := clientset.AppsV1().Deployments(config.Namespace).Update(deployment.DeepCopy())
-								if err != nil {
-									glog.Errorf("Scale error: %s", err)
-								} else {
-									deployment, err := clientset.AppsV1().Deployments(config.Namespace).Get(dref.Name, meta_v1.GetOptions{})
-									if err != nil {
-										glog.Errorf("Fail to find Deploymnet %s: %s", cref.Name, err)
-									} else {
-										glog.Infof("Deploymnet %s scaled to %d", deployment.Name, *deployment.Spec.Replicas)
-									}
-								}
-
-							}
-						}
-					}
+			if !*cref.Controller {
+				continue
+			}
+			replicaSet, err := clientset.AppsV1().ReplicaSets(config.Namespace).Get(cref.Name, meta_v1.GetOptions{})
+			if err != nil {
+				glog.Errorf("Fail to find ReplicaSet %s: %s", cref.Name, err)
+				continue
+			}
+			for _, dref := range replicaSet.OwnerReferences {
+				if !*dref.Controller {
+					continue
 				}
+				deployment, err := clientset.AppsV1().Deployments(config.Namespace).Get(dref.Name, meta_v1.GetOptions{})
+				if err != nil {
+					glog.Errorf("Fail to find Deploymnet %s: %s", cref.Name, err)
+					continue
+				}
+				glog.Infof("Previous replicas: %d", *deployment.Spec.Replicas)
+				var replicas int32
+				replicas = int32(chaos.Replica)
+				deployment.Spec.Replicas = &replicas
+
+				_, err = clientset.AppsV1().Deployments(config.Namespace).Update(deployment.DeepCopy())
+				if err != nil {
+					glog.Errorf("Scale error: %s", err)
+					continue
+				}
+				deployment, err = clientset.AppsV1().Deployments(config.Namespace).Get(dref.Name, meta_v1.GetOptions{})
+				if err != nil {
+					glog.Errorf("Fail to find Deploymnet %s: %s", cref.Name, err)
+					continue
+				}
+				glog.Infof("Deploymnet %s scaled to %d", deployment.Name, *deployment.Spec.Replicas)
 			}
 		}
 	}
@@ -126,10 +113,7 @@ func AddChaos(clientset *kubernetes.Clientset, config *Config, service *v1.Servi
 	// Wait for response
 	for {
 		allReady := true
-		pods, err := clientset.CoreV1().Pods(config.Namespace).List(meta_v1.ListOptions{LabelSelector: labelselector})
-		if err != nil {
-			return errors.New(fmt.Sprintf("fail to list service %s's corresponding pods : %s", service.Name, err))
-		}
+		pods := GetPods(clientset, service)
 
 		for _, pod := range pods.Items {
 			done, _ := pod.Annotations["kubernetes.io/done-egress-chaos"]
@@ -220,7 +204,7 @@ func CloseChaos(clientset *kubernetes.Clientset, config *Config) error {
 
 	// Set clear flag on nodes' annotation
 	for _, node := range nodes.Items {
-		glog.V(3).Infof("Clearing chaos on node \"%s\"...",node.Name)
+		glog.V(3).Infof("Clearing chaos on node \"%s\"...", node.Name)
 		newAnnotations := node.Annotations
 		newAnnotations["kubernetes.io/clear-chaos"] = " "
 		node.SetAnnotations(newAnnotations)

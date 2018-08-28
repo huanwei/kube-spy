@@ -70,14 +70,27 @@ func GetServices(clientset *kubernetes.Clientset, config *Config) []*v1.Service 
 	return services
 }
 
-func GetPods(clientset *kubernetes.Clientset, service *v1.Service) (cidrs, podNames []string) {
-	selector := service.Spec.Selector
-
-	pods, err := clientset.CoreV1().Pods("").List(meta_v1.ListOptions{LabelSelector: "app=" + selector["app"]})
-	if err != nil {
-		glog.Errorf(fmt.Sprintf("Failed to get pods:%s", err))
-		return cidrs, podNames
+func GetPods(clientset *kubernetes.Clientset, service *v1.Service) *v1.PodList {
+	// Find pods' selector
+	labelSelector := ""
+	for selector, value := range service.Spec.Selector {
+		if labelSelector == "" {
+			labelSelector += selector + "=" + value
+		} else {
+			labelSelector += "," + selector + "=" + value
+		}
 	}
+	// Get pods using selectors
+	pods, err := clientset.CoreV1().Pods("").List(meta_v1.ListOptions{LabelSelector: labelSelector})
+	if err != nil {
+		glog.Errorf(fmt.Sprintf("Failed to get pods of service %s:%s", service.Name, err))
+	}
+
+	return pods
+}
+
+func GetPodsInfo(pods *v1.PodList) (cidrs, podNames []string) {
+	// get all pods' ip and names
 	for _, pod := range pods.Items {
 		cidrs = append(cidrs, pod.Status.PodIP)
 		podNames = append(podNames, pod.Name)
@@ -88,35 +101,40 @@ func GetPods(clientset *kubernetes.Clientset, service *v1.Service) (cidrs, podNa
 func PingPods(cidrs []string) (delay, loss []string) {
 	for _, cidr := range cidrs {
 		e := exec.New()
+		// Ping ip of pod 100 times in 1 sec
 		glog.Infof(fmt.Sprintf("ping " + cidr))
 		data, err := e.Command("ping", "-i", "0.01", "-c", "100", cidr).CombinedOutput()
 		if err != nil {
 			glog.Errorf(fmt.Sprintf("Failed to ping %s:%s", cidr, err))
-		} else {
-			scanner := bufio.NewScanner(bytes.NewBuffer(data))
-			for scanner.Scan() {
-				line := strings.TrimSpace(scanner.Text())
-				if len(line) == 0 {
-					continue
-				}
-				if strings.Contains(line, "transmitted") {
-					glog.Infof(fmt.Sprintf("%s", line))
-					parts := strings.Split(line, " ")
-					percent := strings.Split(parts[5], "!")[0]
-					loss = append(loss, percent)
-				}
-				if strings.Contains(line, "rtt") {
-					glog.Infof(fmt.Sprintf("%s", line))
-					delay = append(delay, line)
-				}
+			continue
+		}
+		// Scan the ping statistics
+		scanner := bufio.NewScanner(bytes.NewBuffer(data))
+		for scanner.Scan() {
+			line := strings.TrimSpace(scanner.Text())
+			if len(line) == 0 {
+				continue
+			}
+			// Get loss line
+			if strings.Contains(line, "transmitted") {
+				glog.Infof(fmt.Sprintf("%s", line))
+				parts := strings.Split(line, " ")
+				percent := strings.Split(parts[5], "!")[0]
+				loss = append(loss, percent)
+			}
+			// Get delay statistics line
+			if strings.Contains(line, "rtt") {
+				glog.Infof(fmt.Sprintf("%s", line))
+				delay = append(delay, line)
 			}
 		}
 	}
 	return delay, loss
 }
 
+// Send results to influxdb
 func StorePingResults(serviceName, namespace string, chaos *Chaos, podNames, delay, loss []string) {
-	for i, _ := range podNames {
+	for i, _ := range loss {
 		AddPingResult(serviceName, namespace, chaos, podNames[i], delay[i], loss[i])
 	}
 	SendPingResults()

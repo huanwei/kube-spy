@@ -6,16 +6,16 @@ VictimServices:
 - name: "http-test-service1"
   chaosList:
   - replica: 1
-    ingress: ",delay,100ms"
-    egress: ",delay,100ms"
+    ingress: ",delay,50ms"
+    egress: ",delay,50ms"
 - name: "http-test-service2"
   chaosList:
-  - ingress: ",delay,100ms"
-    egress: ",delay,100ms"
+  - ingress: ",delay,50ms"
+    egress: ",delay,50ms"
 - name: "http-test-service3"
   chaosList:
-  - ingress: ",delay,100ms"
-    egress: ",delay,100ms"
+  - ingress: ",delay,50ms"
+    egress: ",delay,50ms"
 
 # This can override the address of the API server to enable out-of-cluster test
 #APIServerAddr: "httpbin.org"

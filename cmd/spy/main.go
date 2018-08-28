@@ -46,11 +46,12 @@ func main() {
 			glog.Infof("None chaos test")
 			spy.Dotests(spyConfig, host, nil, nil)
 		} else {
+			// No chaos for this service, skip
 			if len(spyConfig.VictimServices[i].ChaosList) == 0 {
 				continue
 			}
 			// Detect network environment
-			cidrs, podNames := spy.GetPods(clientset, services[i])
+			cidrs, podNames := spy.GetPodsInfo(spy.GetPods(clientset, services[i]))
 			delay, loss := spy.PingPods(cidrs)
 			spy.StorePingResults(services[i].Name, services[i].Namespace, nil, podNames, delay, loss)
 			// Chaos tests
@@ -64,14 +65,14 @@ func main() {
 				// Do tests
 				spy.Dotests(spyConfig, host, &spyConfig.VictimServices[i], &chaos)
 				// Detect network environment
-				cidrs, podNames := spy.GetPods(clientset, services[i])
+				cidrs, podNames := spy.GetPodsInfo(spy.GetPods(clientset, services[i]))
 				delay, loss := spy.PingPods(cidrs)
 				spy.StorePingResults(services[i].Name, services[i].Namespace, &chaos, podNames, delay, loss)
 				// Clear chaos
 				spy.ClearChaos(clientset, spyConfig)
 			}
 			// Detect network environment
-			cidrs, podNames = spy.GetPods(clientset, services[i])
+			cidrs, podNames = spy.GetPodsInfo(spy.GetPods(clientset, services[i]))
 			delay, loss = spy.PingPods(cidrs)
 			spy.StorePingResults(services[i].Name, services[i].Namespace, nil, podNames, delay, loss)
 		}

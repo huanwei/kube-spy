@@ -6,9 +6,6 @@ metadata:
   labels:
     name: kube-spy
 spec:
-#  selector:
-#    matchLabels:
-#      name: kube-spy
   template:
     metadata:
       labels:
@@ -19,8 +16,6 @@ spec:
       restartPolicy: OnFailure
       containers:
       - name: kube-spy
-        securityContext:
-          privileged: true
         image: kube-spy:v0.1
         args: ["-v=3"]
         imagePullPolicy: IfNotPresent
@@ -35,11 +30,6 @@ spec:
           mountPath: /tmp
         - name: config
           mountPath: /spy
-       # command:
-       # - kube-chaos
-       # - --etcd-endpoint=http://10.96.232.136:6666
-       # - --labelSelector=chaos=open
-       # - --v=4
       volumes:
       - name: etckubernetes
         hostPath:
@@ -59,5 +49,3 @@ spec:
           items:
             - key: spy
               path: spy.conf
-      #hostNetwork: true
-      #dnsPolicy: ClusterFirstWithHostNet

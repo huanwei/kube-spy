@@ -82,12 +82,4 @@ func main() {
 
 	}
 
-
-
-
-	// Wait for terminating
-	//for {
-	//	time.Sleep(time.Duration(10) * time.Second)
-	//}
-
 }

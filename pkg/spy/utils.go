@@ -103,9 +103,11 @@ func PingPods(cidrs []string) (delay, loss []string) {
 		e := exec.New()
 		// Ping ip of pod 100 times in 1 sec
 		glog.Infof(fmt.Sprintf("ping " + cidr))
-		data, err := e.Command("ping", "-i", "0.01", "-c", "100", cidr).CombinedOutput()
+		data, err := e.Command("ping", "-i", "0.01", "-c", "100", "-q", cidr).CombinedOutput()
 		if err != nil {
-			glog.Errorf(fmt.Sprintf("Failed to ping %s:%s", cidr, err))
+			glog.Infof(fmt.Sprintf("Failed to ping %s:%s", cidr, err))
+			loss = append(loss, "100%")
+			delay = append(delay, "Timeout")
 			continue
 		}
 		// Scan the ping statistics
@@ -134,7 +136,7 @@ func PingPods(cidrs []string) (delay, loss []string) {
 
 // Send results to influxdb
 func StorePingResults(serviceName, namespace string, chaos *Chaos, podNames, delay, loss []string) {
-	for i, _ := range loss {
+	for i, _ := range podNames {
 		AddPingResult(serviceName, namespace, chaos, podNames[i], delay[i], loss[i])
 	}
 	SendPingResults()

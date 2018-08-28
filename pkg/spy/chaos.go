@@ -17,8 +17,7 @@ func AddChaos(clientset *kubernetes.Clientset, config *Config, service *v1.Servi
 	pods := GetPods(clientset, service)
 
 	// Control replicas
-	ChangeReplicas(clientset,pods,int32(chaos.Replica),config.Namespace)
-
+	ChangeReplicas(clientset, pods, int32(chaos.Replica), config.Namespace)
 
 	// Find all nodes running this service's pods
 	nodes := make(map[string]*v1.Node)
@@ -198,7 +197,7 @@ func CloseChaos(clientset *kubernetes.Clientset, config *Config) error {
 }
 
 // Control replicas via their deployment
-func ChangeReplicas(clientset *kubernetes.Clientset,pods *v1.PodList,replica int32,namespace string){
+func ChangeReplicas(clientset *kubernetes.Clientset, pods *v1.PodList, replica int32, namespace string) {
 
 	if replica != 0 {
 		for _, cref := range pods.Items[0].OwnerReferences {

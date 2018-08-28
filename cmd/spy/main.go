@@ -48,8 +48,10 @@ func main() {
 			if len(spyConfig.VictimServices[i].ChaosList)==0{
 				continue
 			}
-			cidrs := spy.GetPod(clientset, services[i])
-			spy.PingPods(cidrs)
+			// Detect network environment
+			cidrs, podNames := spy.GetPods(clientset, services[i])
+			delay,loss := spy.PingPods(cidrs)
+			spy.StorePingResults(services[i].Name, services[i].Namespace, len(cidrs),"","",podNames,delay,loss)
 			// Chaos tests
 			for _, chaos := range spyConfig.VictimServices[i].ChaosList {
 				glog.Infof("Chaos test: Victim %s, Chaos %v", spyConfig.VictimServices[i].Name,chaos)
@@ -61,11 +63,16 @@ func main() {
 				// Do tests
 				spy.Dotests(spyConfig, host,&spyConfig.VictimServices[i],&chaos)
 				// Detect network environment
-				spy.PingPods(cidrs)
+				cidrs, podNames := spy.GetPods(clientset, services[i])
+				delay,loss := spy.PingPods(cidrs)
+				spy.StorePingResults(services[i].Name, services[i].Namespace, len(cidrs),chaos.Ingress,chaos.Egress,podNames,delay,loss)
 				// Clear chaos
 				spy.ClearChaos(clientset, spyConfig)
 			}
-			spy.PingPods(cidrs)
+			// Detect network environment
+			cidrs, podNames = spy.GetPods(clientset, services[i])
+			delay,loss = spy.PingPods(cidrs)
+			spy.StorePingResults(services[i].Name, services[i].Namespace, len(cidrs),"","",podNames,delay,loss)
 		}
 
 	}

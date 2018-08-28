@@ -85,23 +85,22 @@ func GetHost(clientset *kubernetes.Clientset, service *v1.Service) string {
 	return host
 }
 
-func GetPod(clientset *kubernetes.Clientset, service *v1.Service) []string {
-	cidrs := []string{}
+func GetPods(clientset *kubernetes.Clientset, service *v1.Service) (cidrs, podNames []string) {
 	selector := service.Spec.Selector
 
 	pods ,err := clientset.CoreV1().Pods("").List(meta_v1.ListOptions{LabelSelector:"app="+selector["app"]})
 	if err != nil{
 		glog.Errorf(fmt.Sprintf("Failed to get pods:%s",err))
-		return cidrs
+		return cidrs,podNames
 	}
 	for _,pod := range pods.Items{
-		cidr := fmt.Sprintf("%s", pod.Status.PodIP) //192.168.0.10
-		cidrs = append(cidrs, cidr)
+		cidrs = append(cidrs, pod.Status.PodIP)
+		podNames = append(podNames, pod.Name)
 	}
-	return cidrs
+	return cidrs,podNames
 }
 
-func PingPods(cidrs []string)  {
+func PingPods(cidrs []string)  (delay,loss[]string){
 	for _,cidr := range cidrs{
 		e := exec.New()
 		glog.Infof(fmt.Sprintf("ping "+cidr))
@@ -115,10 +114,25 @@ func PingPods(cidrs []string)  {
 				if len(line) == 0 {
 					continue
 				}
-				if strings.Contains(line, "transmitted") || strings.Contains(line, "rtt") {
+				if strings.Contains(line, "transmitted") {
 					glog.Infof(fmt.Sprintf("%s",line))
+					parts := strings.Split(line, " ")
+					percent := strings.Split(parts[5],"!")[0]
+					loss = append(loss, percent)
+				}
+				if strings.Contains(line, "rtt") {
+					glog.Infof(fmt.Sprintf("%s",line))
+					delay = append(delay, line)
 				}
 			}
 		}
 	}
+	return delay,loss
+}
+
+func StorePingResults(serviceName,namespace string, replicas int, ingress,egress string,podNames,delay,loss []string){
+	for i := 0; i < len(delay); i++{
+		AddPingResult(serviceName,namespace,replicas,ingress,egress,podNames[i],delay[i],loss[i])
+	}
+	SendPingResults()
 }

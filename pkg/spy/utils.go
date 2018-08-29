@@ -144,11 +144,12 @@ func StorePingResults(serviceName, namespace string, chaos *Chaos, podNames, del
 	SendPingResults()
 }
 
-func GetPartPods(podlist *v1.PodList, Range string) []v1.Pod {
+func GetPartPods(clientset *kubernetes.Clientset, service *v1.Service , Range string) []v1.Pod {
 	var (
 		err error
 		num int
 	)
+	podlist:=GetPods(clientset,service)
 
 	// Default value: all pods
 	num = len(podlist.Items)

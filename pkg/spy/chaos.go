@@ -49,7 +49,7 @@ func AddChaos(clientset *kubernetes.Clientset, config *Config, service *v1.Servi
 	}
 
 	// Able to select some of the pods to do chaos
-	chaosPods := GetPartPods(pods, chaos.Range)
+	chaosPods := GetPartPods(clientset, service, chaos.Range)
 
 	// Open these pods' chaos
 	for _, pod := range chaosPods {
@@ -203,41 +203,42 @@ func CloseChaos(clientset *kubernetes.Clientset, config *Config) error {
 
 // Control replicas via their deployment
 func ChangeReplicas(clientset *kubernetes.Clientset, pods *v1.PodList, replica int32, namespace string) {
-
-	if replica != 0 {
-		for _, cref := range pods.Items[0].OwnerReferences {
-			if !*cref.Controller {
+	if replica == 0 {
+		return
+	}
+	for _, cref := range pods.Items[0].OwnerReferences {
+		if !*cref.Controller {
+			continue
+		}
+		replicaSet, err := clientset.AppsV1().ReplicaSets(namespace).Get(cref.Name, meta_v1.GetOptions{})
+		if err != nil {
+			glog.Errorf("Fail to find ReplicaSet %s: %s", cref.Name, err)
+			continue
+		}
+		for _, dref := range replicaSet.OwnerReferences {
+			if !*dref.Controller {
 				continue
 			}
-			replicaSet, err := clientset.AppsV1().ReplicaSets(namespace).Get(cref.Name, meta_v1.GetOptions{})
+			deployment, err := clientset.AppsV1().Deployments(namespace).Get(dref.Name, meta_v1.GetOptions{})
 			if err != nil {
-				glog.Errorf("Fail to find ReplicaSet %s: %s", cref.Name, err)
+				glog.Errorf("Fail to find Deploymnet %s: %s", cref.Name, err)
 				continue
 			}
-			for _, dref := range replicaSet.OwnerReferences {
-				if !*dref.Controller {
-					continue
-				}
-				deployment, err := clientset.AppsV1().Deployments(namespace).Get(dref.Name, meta_v1.GetOptions{})
-				if err != nil {
-					glog.Errorf("Fail to find Deploymnet %s: %s", cref.Name, err)
-					continue
-				}
-				glog.Infof("Previous replicas: %d", *deployment.Spec.Replicas)
-				deployment.Spec.Replicas = &replica
+			glog.Infof("Previous replicas: %d", *deployment.Spec.Replicas)
+			deployment.Spec.Replicas = &replica
 
-				_, err = clientset.AppsV1().Deployments(namespace).Update(deployment.DeepCopy())
-				if err != nil {
-					glog.Errorf("Scale error: %s", err)
-					continue
-				}
-				deployment, err = clientset.AppsV1().Deployments(namespace).Get(dref.Name, meta_v1.GetOptions{})
-				if err != nil {
-					glog.Errorf("Fail to find Deploymnet %s: %s", cref.Name, err)
-					continue
-				}
-				glog.Infof("Deploymnet %s scaled to %d", deployment.Name, *deployment.Spec.Replicas)
+			_, err = clientset.AppsV1().Deployments(namespace).Update(deployment.DeepCopy())
+			if err != nil {
+				glog.Errorf("Scale error: %s", err)
+				continue
 			}
+			deployment, err = clientset.AppsV1().Deployments(namespace).Get(dref.Name, meta_v1.GetOptions{})
+			if err != nil {
+				glog.Errorf("Fail to find Deploymnet %s: %s", cref.Name, err)
+				continue
+			}
+			glog.Infof("Deploymnet %s scaled to %d", deployment.Name, *deployment.Spec.Replicas)
 		}
 	}
+
 }

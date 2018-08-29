@@ -55,9 +55,6 @@ func main() {
 			if len(spyConfig.VictimServices[i].ChaosList) == 0 {
 				continue
 			}
-			// Detect network environment
-			cidrs, podNames := spy.GetPodsInfo(spy.GetPods(clientset, services[i],0))
-			spy.PingPods(services[i].Name, services[i].Namespace, nil, podNames, cidrs)
 			// Chaos tests
 			var (
 				previousReplica = 0
@@ -65,24 +62,39 @@ func main() {
 			)
 			for _, chaos := range spyConfig.VictimServices[i].ChaosList {
 				glog.Infof("Chaos test: Victim %s, Chaos %v", spyConfig.VictimServices[i].Name, chaos)
+
+				// Control replicas
+				pods := spy.GetPods(clientset, services[i], 0)
+				previousReplica = spy.ChangeReplicas(clientset, &pods.Items[0], int32(chaos.Replica), spyConfig.Namespace)
+
+				// Get pods after changing replicas
+				pods = spy.GetPods(clientset, services[i], 0)
+
+				// Detect network environment before adding chaos
+				cidrs, podNames := spy.GetPodsInfo(pods)
+				spy.PingPods(services[i].Name, services[i].Namespace, nil, podNames, cidrs)
+
 				// Add chaos
-				previousReplica, err = spy.AddChaos(clientset, spyConfig, services[i], &chaos)
+				err = spy.AddChaos(clientset, spyConfig, services[i], &chaos, pods)
 				if err != nil {
 					glog.Errorf("Adding chaos error: %s", err)
 				}
-				// Do tests
+
+				// Do API tests
 				spy.Dotests(spyConfig, host, &spyConfig.VictimServices[i], &chaos)
-				// Detect network environment
-				cidrs, podNames := spy.GetPodsInfo(spy.GetPods(clientset, services[i],0))
+
+				// Detect network environment under chaos
 				spy.PingPods(services[i].Name, services[i].Namespace, &chaos, podNames, cidrs)
+
 				// Clear chaos
-				spy.ClearChaos(clientset, spyConfig,previousReplica)
+				spy.ClearChaos(clientset, spyConfig)
+
+				// Detect network environment after removing chaos
+				spy.PingPods(services[i].Name, services[i].Namespace, nil, podNames, cidrs)
+
+				// Restore replicas
+				spy.ChangeReplicas(clientset, &pods.Items[0], int32(previousReplica), spyConfig.Namespace)
 			}
-			// Detect network environment
-			cidrs, podNames = spy.GetPodsInfo(spy.GetPods(clientset, services[i],previousReplica))
-			spy.PingPods(services[i].Name, services[i].Namespace, nil, podNames, cidrs)
 		}
-
 	}
-
 }

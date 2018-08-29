@@ -95,8 +95,8 @@ func GetPods(clientset *kubernetes.Clientset, service *v1.Service, desired int) 
 			glog.Errorf(fmt.Sprintf("Failed to get pods of service %s:%s", service.Name, err))
 		}
 
-		if desired!=0 && desired!=len(pods.Items){
-			time.Sleep(50*time.Millisecond)
+		if desired != 0 && desired != len(pods.Items) {
+			time.Sleep(50 * time.Millisecond)
 			continue
 		}
 		break
@@ -152,15 +152,14 @@ func PingPods(serviceName, namespace string, chaos *Chaos, podNames, cidrs []str
 	SendPingResults()
 }
 
-func GetPartPods(clientset *kubernetes.Clientset, service *v1.Service, Range string) []v1.Pod {
+func GetPartPods(podList *v1.PodList, Range string) []v1.Pod {
 	var (
 		err error
 		num int
 	)
-	podlist := GetPods(clientset, service,0)
 
 	// Default value: all pods
-	num = len(podlist.Items)
+	num = len(podList.Items)
 	// If set, get part of the pods to do chaos
 	if Range != "" {
 		// Percentage
@@ -172,13 +171,13 @@ func GetPartPods(clientset *kubernetes.Clientset, service *v1.Service, Range str
 				if percent < 0 || percent > 100 {
 					err = errors.New("percentage out of range")
 				} else {
-					num = int(percent * float32(len(podlist.Items)) / 100)
+					num = int(percent * float32(len(podList.Items)) / 100)
 				}
 			}
 		} else {
 			// Integer
 			num, err = strconv.Atoi(Range)
-			if err == nil && num > len(podlist.Items) {
+			if err == nil && num > len(podList.Items) {
 				err = errors.New("range larger than total pods number")
 			}
 		}
@@ -186,9 +185,9 @@ func GetPartPods(clientset *kubernetes.Clientset, service *v1.Service, Range str
 	if err != nil {
 		glog.Errorf("Invalid chaos pod range [%s] : %s", Range, err)
 		// Default value: all pods
-		num = len(podlist.Items)
+		num = len(podList.Items)
 	}
 
 	glog.V(3).Infof("Selected pods num: %d", num)
-	return podlist.Items[:num]
+	return podList.Items[:num]
 }

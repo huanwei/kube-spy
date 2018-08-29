@@ -114,8 +114,7 @@ func PingPods(serviceName, namespace string, chaos *Chaos, podNames, cidrs []str
 	for i, cidr := range cidrs {
 		e := exec.New()
 		// Ping ip of pod 100 times in 1 sec
-		glog.Infof(fmt.Sprintf("ping " + cidr))
-		data, err := e.Command("ping", "-i", "0.01", "-c", "100", "-q", cidr).CombinedOutput()
+		data, err := e.Command("ping", "-i", "0.001", "-c", "20", "-q", cidr).CombinedOutput()
 		if err != nil {
 			glog.Infof(fmt.Sprintf("Failed to ping %s:%s", cidr, err))
 			loss = "100%"
@@ -130,17 +129,16 @@ func PingPods(serviceName, namespace string, chaos *Chaos, podNames, cidrs []str
 				}
 				// Get loss line
 				if strings.Contains(line, "transmitted") {
-					glog.Infof(fmt.Sprintf("%s", line))
 					parts := strings.Split(line, " ")
 					loss = strings.Split(parts[5], "!")[0]
 				}
 				// Get delay statistics line
 				if strings.Contains(line, "rtt") {
-					glog.Infof(fmt.Sprintf("%s", line))
 					delay = line
 				}
 			}
 		}
+		glog.Infof(fmt.Sprintf("ping %s loss:%s rtt:%s", cidr, loss, delay))
 		AddPingResult(serviceName, namespace, chaos, podNames[i], delay, loss)
 	}
 	SendPingResults()

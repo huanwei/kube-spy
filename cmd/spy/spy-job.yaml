@@ -1,14 +1,11 @@
-apiVersion: apps/v1
-kind: Deployment
+apiVersion: batch/v1
+kind: Job
 metadata:
   name: kube-spy
   namespace: default
   labels:
     name: kube-spy
 spec:
-  selector:
-    matchLabels:
-      name: kube-spy
   template:
     metadata:
       labels:
@@ -16,11 +13,11 @@ spec:
     spec:
       nodeSelector:
         spy: "on"
+      restartPolicy: OnFailure
       containers:
       - name: kube-spy
-        securityContext:
-          privileged: true
         image: kube-spy:v0.1
+        args: ["-v=3"]
         imagePullPolicy: IfNotPresent
         volumeMounts:
         - name: etckubernetes
@@ -33,11 +30,6 @@ spec:
           mountPath: /tmp
         - name: config
           mountPath: /spy
-       # command:
-       # - kube-chaos
-       # - --etcd-endpoint=http://10.96.232.136:6666
-       # - --labelSelector=chaos=open
-       # - --v=4
       volumes:
       - name: etckubernetes
         hostPath:
@@ -57,5 +49,3 @@ spec:
           items:
             - key: spy
               path: spy.conf
-      #hostNetwork: true
-      #dnsPolicy: ClusterFirstWithHostNet

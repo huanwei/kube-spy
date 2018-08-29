@@ -3,29 +3,30 @@ package spy
 import (
 	"github.com/go-resty/resty"
 	"github.com/golang/glog"
+	"k8s.io/client-go/kubernetes"
 	"time"
 )
 
-func ConfigHTTPClient(client *resty.Client, config *Config) {
+func ConfigHTTPClient(client *resty.Client, APIsetting *TestCase, Clientsetting *ClientSetting) {
 	client.SetAllowGetMethodPayload(true)
-	client.SetQueryParams(config.APISetting.Params)
-	client.SetHeaders(config.APISetting.Headers)
+	client.SetQueryParams(APIsetting.Params)
+	client.SetHeaders(APIsetting.Headers)
 
-	if config.APISetting.AuthToken != "" {
-		client.SetAuthToken(config.APISetting.AuthToken)
+	if APIsetting.AuthToken != "" {
+		client.SetAuthToken(APIsetting.AuthToken)
 	}
-	if config.APISetting.BasicAuth.Username != "" {
-		client.SetBasicAuth(config.APISetting.BasicAuth.Username, config.APISetting.BasicAuth.Password)
-	}
-
-	if config.ClientSetting.RetryCount > 0 {
-		client.SetRetryCount(config.ClientSetting.RetryCount)
-		client.SetRetryWaitTime(time.Duration(config.ClientSetting.RetryWait) * time.Millisecond)
-		client.SetRetryMaxWaitTime(time.Duration(config.ClientSetting.RetryMaxWait) * time.Millisecond)
+	if APIsetting.BasicAuth.Username != "" {
+		client.SetBasicAuth(APIsetting.BasicAuth.Username, APIsetting.BasicAuth.Password)
 	}
 
-	if config.ClientSetting.Timeout != 0 {
-		client.SetTimeout(time.Duration(config.ClientSetting.Timeout) * time.Millisecond)
+	if Clientsetting.RetryCount > 0 {
+		client.SetRetryCount(Clientsetting.RetryCount)
+		client.SetRetryWaitTime(time.Duration(Clientsetting.RetryWait) * time.Millisecond)
+		client.SetRetryMaxWaitTime(time.Duration(Clientsetting.RetryMaxWait) * time.Millisecond)
+	}
+
+	if Clientsetting.Timeout != 0 {
+		client.SetTimeout(time.Duration(Clientsetting.Timeout) * time.Millisecond)
 	}
 
 }
@@ -57,7 +58,7 @@ func DoTest(client *resty.Client, test TestCase, host string) (error, *resty.Res
 
 	var response *resty.Response
 
-	glog.Infof("method %s", test.Method)
+	glog.V(1).Infof("host %s, method %s, url %s", host, test.Method, test.URL)
 	var err error
 	// Select method and send
 	switch test.Method {
@@ -95,27 +96,41 @@ func DoTest(client *resty.Client, test TestCase, host string) (error, *resty.Res
 
 	// Check potential error
 	if err != nil {
-		glog.Infof("Request fail, Duration: %v", response.Time())
+		glog.V(1).Infof("Request fail, Duration: %v", response.Time())
 	} else {
-		glog.Infof("Request success:\n%s\n Duration: %v", response, response.Time())
+		glog.V(1).Infof("Request success:\n%s\n Duration: %v", response, response.Time())
 	}
 	glog.Flush()
 	return err, response
 }
 
-//func NewRestyClient(config *Config)*resty.Client{
-//	client := resty.New()
-//	ConfigHTTPClient(client, config)
-//	return client
-//}
+func Dotests(clientset *kubernetes.Clientset, config *Config, service *VictimService, chaos *Chaos) {
 
-func Dotests(config *Config, host string, service *VictimService, chaos *Chaos) {
-	client := resty.New()
-	ConfigHTTPClient(client, config)
-	for _, test := range config.TestCases {
-		err, response := DoTest(client, test, host)
-		AddResponse(service, chaos, &test, response, err)
+	for _, testcases := range config.TestCaseLists {
+		client := resty.New()
+		// Apply global http client settings
+		ConfigHTTPClient(client, &config.APISetting, &config.ClientSetting)
+		// Apply local http client settings
+		ConfigHTTPClient(client, &testcases.APIsetting, &testcases.ClientSetting)
+		// Find host
+		var host string
+		if testcases.Host == "" {
+			service, err := GetService(clientset, config, testcases.Service)
+			if err != nil {
+				glog.Errorf("Can't find service \"%s\", continue: %s", testcases.Service, err)
+				continue
+			}
+			host = service.Spec.ClusterIP
+		} else {
+			host = testcases.Host
+		}
+		// Do tests
+		for _, test := range testcases.TestCases {
+			err, response := DoTest(client, test, host)
+			AddResponse(service, chaos, &test, response, err)
+		}
+		// Send response to db
+		SendResponses()
 	}
-	// Send response to db
-	SendResponses()
+
 }

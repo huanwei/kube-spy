@@ -224,7 +224,7 @@ func ChangeReplicas(clientset *kubernetes.Clientset, pods *v1.PodList, replica i
 				glog.Errorf("Fail to find Deploymnet %s: %s", cref.Name, err)
 				continue
 			}
-			glog.Infof("Previous replicas: %d", *deployment.Spec.Replicas)
+			glog.V(3).Infof("Previous replicas: %d", *deployment.Spec.Replicas)
 			deployment.Spec.Replicas = &replica
 
 			_, err = clientset.AppsV1().Deployments(namespace).Update(deployment.DeepCopy())
@@ -237,7 +237,24 @@ func ChangeReplicas(clientset *kubernetes.Clientset, pods *v1.PodList, replica i
 				glog.Errorf("Fail to find Deploymnet %s: %s", cref.Name, err)
 				continue
 			}
-			glog.Infof("Deploymnet %s scaled to %d", deployment.Name, *deployment.Spec.Replicas)
+			glog.V(3).Infof("Deploymnet %s scaled to %d, waiting for them to ready...", deployment.Name, *deployment.Spec.Replicas)
+
+			// Loop for checking availability
+			for {
+				// If all available, break to work
+				if deployment.Status.UnavailableReplicas == 0 {
+					glog.V(3).Infof("Replicas all ready")
+					break
+				}
+				// Else wait
+				glog.V(3).Infof("Unavailable replicas: %d", deployment.Status.UnavailableReplicas)
+				time.Sleep(50 * time.Millisecond)
+				deployment, err = clientset.AppsV1().Deployments(namespace).Get(dref.Name, meta_v1.GetOptions{})
+				if err != nil {
+					glog.Errorf("Fail to find Deploymnet %s: %s", cref.Name, err)
+					continue
+				}
+			}
 		}
 	}
 

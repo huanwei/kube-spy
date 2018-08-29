@@ -48,8 +48,11 @@ func AddChaos(clientset *kubernetes.Clientset, config *Config, service *v1.Servi
 		}
 	}
 
+	// Able to select some of the pods to do chaos
+	chaosPods:=GetPartPods(pods,chaos.Range)
+
 	// Open these pods' chaos
-	for _, pod := range pods.Items {
+	for _, pod := range chaosPods {
 		// Set labels
 		newLabels := pod.Labels
 		newLabels["chaos"] = "on"
@@ -192,6 +195,8 @@ func CloseChaos(clientset *kubernetes.Clientset, config *Config) error {
 		cnt++
 		time.Sleep(100 * time.Millisecond)
 	}
+
+	glog.V(3).Infof("Chaos cleared")
 
 	return nil
 }

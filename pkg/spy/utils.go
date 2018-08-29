@@ -114,46 +114,40 @@ func GetPodsInfo(pods *v1.PodList) (cidrs, podNames []string) {
 	return cidrs, podNames
 }
 
-func PingPods(cidrs []string) (delay, loss []string) {
-	for _, cidr := range cidrs {
+func PingPods(serviceName, namespace string, chaos *Chaos, podNames, cidrs []string) {
+	var loss, delay string
+
+	for i, cidr := range cidrs {
 		e := exec.New()
 		// Ping ip of pod 100 times in 1 sec
 		glog.Infof(fmt.Sprintf("ping " + cidr))
 		data, err := e.Command("ping", "-i", "0.01", "-c", "100", "-q", cidr).CombinedOutput()
 		if err != nil {
 			glog.Infof(fmt.Sprintf("Failed to ping %s:%s", cidr, err))
-			loss = append(loss, "100%")
-			delay = append(delay, "Timeout")
-			continue
+			loss = "100%"
+			delay = "Timeout"
+		} else {
+			// Scan the ping statistics
+			scanner := bufio.NewScanner(bytes.NewBuffer(data))
+			for scanner.Scan() {
+				line := strings.TrimSpace(scanner.Text())
+				if len(line) == 0 {
+					continue
+				}
+				// Get loss line
+				if strings.Contains(line, "transmitted") {
+					glog.Infof(fmt.Sprintf("%s", line))
+					parts := strings.Split(line, " ")
+					loss = strings.Split(parts[5], "!")[0]
+				}
+				// Get delay statistics line
+				if strings.Contains(line, "rtt") {
+					glog.Infof(fmt.Sprintf("%s", line))
+					delay = line
+				}
+			}
 		}
-		// Scan the ping statistics
-		scanner := bufio.NewScanner(bytes.NewBuffer(data))
-		for scanner.Scan() {
-			line := strings.TrimSpace(scanner.Text())
-			if len(line) == 0 {
-				continue
-			}
-			// Get loss line
-			if strings.Contains(line, "transmitted") {
-				glog.Infof(fmt.Sprintf("%s", line))
-				parts := strings.Split(line, " ")
-				percent := strings.Split(parts[5], "!")[0]
-				loss = append(loss, percent)
-			}
-			// Get delay statistics line
-			if strings.Contains(line, "rtt") {
-				glog.Infof(fmt.Sprintf("%s", line))
-				delay = append(delay, line)
-			}
-		}
-	}
-	return delay, loss
-}
-
-// Send results to influxdb
-func StorePingResults(serviceName, namespace string, chaos *Chaos, podNames, delay, loss []string) {
-	for i, _ := range podNames {
-		AddPingResult(serviceName, namespace, chaos, podNames[i], delay[i], loss[i])
+		AddPingResult(serviceName, namespace, chaos, podNames[i], delay, loss)
 	}
 	SendPingResults()
 }

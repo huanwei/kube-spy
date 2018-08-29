@@ -49,7 +49,7 @@ func AddChaos(clientset *kubernetes.Clientset, config *Config, service *v1.Servi
 	}
 
 	// Able to select some of the pods to do chaos
-	chaosPods:=GetPartPods(pods,chaos.Range)
+	chaosPods := GetPartPods(pods, chaos.Range)
 
 	// Open these pods' chaos
 	for _, pod := range chaosPods {

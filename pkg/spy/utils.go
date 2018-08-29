@@ -144,39 +144,42 @@ func StorePingResults(serviceName, namespace string, chaos *Chaos, podNames, del
 	SendPingResults()
 }
 
-func GetPartPods(podlist *v1.PodList,Range string)[]v1.Pod{
+func GetPartPods(podlist *v1.PodList, Range string) []v1.Pod {
 	var (
 		err error
 		num int
 	)
 
 	// Default value: all pods
-	num=len(podlist.Items)
+	num = len(podlist.Items)
 	// If set, get part of the pods to do chaos
-	if Range!=""{
+	if Range != "" {
 		// Percentage
-		if Range[len(Range)-1]=='%'{
+		if Range[len(Range)-1] == '%' {
 			var percent float32
-			_,err=fmt.Sscanf(Range,"%f",&percent)
-			if err==nil{
+			_, err = fmt.Sscanf(Range, "%f", &percent)
+			if err == nil {
 				// Check value
-				if percent<0||percent>100{
-					err=errors.New("percentage out of range")
-				}else {
-					num=int(percent*float32(len(podlist.Items))/100)
+				if percent < 0 || percent > 100 {
+					err = errors.New("percentage out of range")
+				} else {
+					num = int(percent * float32(len(podlist.Items)) / 100)
 				}
 			}
-		}else {
+		} else {
 			// Integer
-			num,err=strconv.Atoi(Range)
+			num, err = strconv.Atoi(Range)
+			if err == nil && num > len(podlist.Items) {
+				err = errors.New("range larger than total pods number")
+			}
 		}
 	}
-	if err!=nil{
-		glog.Errorf("Invalid chaos pod range [%s] : %s",Range,err)
+	if err != nil {
+		glog.Errorf("Invalid chaos pod range [%s] : %s", Range, err)
 		// Default value: all pods
-		num=len(podlist.Items)
+		num = len(podlist.Items)
 	}
 
-	glog.V(3).Infof("Selected pods num: %d",num)
+	glog.V(3).Infof("Selected pods num: %d", num)
 	return podlist.Items[:num]
 }

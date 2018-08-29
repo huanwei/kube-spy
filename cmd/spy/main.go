@@ -25,11 +25,11 @@ func main() {
 	// Get services
 	services := spy.GetServices(clientset, spyConfig)
 
-	// Close connection when exit
-	defer spy.DBClient.Close()
-
 	// Connect to DB
 	spy.ConnectDB(clientset, spyConfig)
+
+	// Close connection when exit
+	defer spy.DBClient.Close()
 
 	// Close all previous chaos
 	spy.CloseChaos(clientset, spyConfig)

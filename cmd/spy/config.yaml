@@ -1,7 +1,7 @@
 # Your services' namespace in kubernetes
 Namespace: "default"
 
-# Your service list, the first one will be considered the API server
+# Your services and it's chaos list
 VictimServices:
 - name: "http-test-service1"
   ChaosList:

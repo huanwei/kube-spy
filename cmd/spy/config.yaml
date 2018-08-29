@@ -90,7 +90,7 @@ TestCases:
 # Client retry settings
 ClientSetting:
   retryCount: 0
-# unit: microseconds
+# unit: milliseconds
   retryWait: 1000
   retryMaxWait: 1000
   timeout: 3000

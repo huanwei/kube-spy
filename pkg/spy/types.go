@@ -20,6 +20,7 @@ type TestCase struct {
 
 type Chaos struct {
 	Replica int    `yaml:"replica"`
+	Range   string `yaml:"range"`
 	Ingress string `yaml:"ingress"`
 	Egress  string `yaml:"egress"`
 }

@@ -5,13 +5,16 @@ Namespace: "default"
 VictimServices:
 - name: "http-test-service1"
   chaosList:
-  - replica: 1
+  - replica: 2
     ingress: ",delay,50ms"
     egress: ",delay,50ms"
+    range: 50%
 - name: "http-test-service2"
   chaosList:
   - ingress: ",delay,50ms"
     egress: ",delay,50ms"
+    replica: 2
+    range: 1
 - name: "http-test-service3"
   chaosList:
   - ingress: ",delay,50ms"

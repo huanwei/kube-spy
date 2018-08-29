@@ -3,6 +3,7 @@ package spy
 import (
 	"bufio"
 	"bytes"
+	"errors"
 	"fmt"
 	"github.com/golang/glog"
 	"github.com/huanwei/kube-chaos/pkg/exec"
@@ -12,6 +13,7 @@ import (
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
+	"strconv"
 	"strings"
 )
 
@@ -140,4 +142,41 @@ func StorePingResults(serviceName, namespace string, chaos *Chaos, podNames, del
 		AddPingResult(serviceName, namespace, chaos, podNames[i], delay[i], loss[i])
 	}
 	SendPingResults()
+}
+
+func GetPartPods(podlist *v1.PodList,Range string)[]v1.Pod{
+	var (
+		err error
+		num int
+	)
+
+	// Default value: all pods
+	num=len(podlist.Items)
+	// If set, get part of the pods to do chaos
+	if Range!=""{
+		// Percentage
+		if Range[len(Range)-1]=='%'{
+			var percent float32
+			_,err=fmt.Sscanf(Range,"%f",&percent)
+			if err==nil{
+				// Check value
+				if percent<0||percent>100{
+					err=errors.New("percentage out of range")
+				}else {
+					num=int(percent*float32(len(podlist.Items))/100)
+				}
+			}
+		}else {
+			// Integer
+			num,err=strconv.Atoi(Range)
+		}
+	}
+	if err!=nil{
+		glog.Errorf("Invalid chaos pod range [%s] : %s",Range,err)
+		// Default value: all pods
+		num=len(podlist.Items)
+	}
+
+	glog.V(3).Infof("Selected pods num: %d",num)
+	return podlist.Items[:num]
 }

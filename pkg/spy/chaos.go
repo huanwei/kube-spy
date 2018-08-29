@@ -13,11 +13,11 @@ import (
 var PodsInChaos []string
 
 // Add chaos to the service's pods
-func AddChaos(clientset *kubernetes.Clientset, config *Config, service *v1.Service, chaos *Chaos) error {
-	pods := GetPods(clientset, service)
+func AddChaos(clientset *kubernetes.Clientset, config *Config, service *v1.Service, chaos *Chaos) (previousReplica int,err error) {
+	pods := GetPods(clientset, service,0)
 
 	// Control replicas
-	ChangeReplicas(clientset, pods, int32(chaos.Replica), config.Namespace)
+	previousReplica=ChangeReplicas(clientset, &pods.Items[0], int32(chaos.Replica), config.Namespace)
 
 	// Find all nodes running this service's pods
 	nodes := make(map[string]*v1.Node)
@@ -26,7 +26,8 @@ func AddChaos(clientset *kubernetes.Clientset, config *Config, service *v1.Servi
 		if !alreadyFound {
 			node, err := clientset.CoreV1().Nodes().Get(pod.Spec.NodeName, meta_v1.GetOptions{})
 			if err != nil {
-				return errors.New(fmt.Sprintf("fail to get node %s : %s", pod.Spec.NodeName, err))
+				err= errors.New(fmt.Sprintf("fail to get node %s : %s", pod.Spec.NodeName, err))
+				return previousReplica,err
 			}
 			nodes[pod.Spec.NodeName] = node
 		}
@@ -44,7 +45,8 @@ func AddChaos(clientset *kubernetes.Clientset, config *Config, service *v1.Servi
 		node.SetLabels(newLabels)
 		_, err := clientset.CoreV1().Nodes().UpdateStatus(node.DeepCopy())
 		if err != nil {
-			return errors.New(fmt.Sprintf("fail to update node status %s : %s", node.Name, err))
+			err =  errors.New(fmt.Sprintf("fail to update node status %s : %s", node.Name, err))
+			return previousReplica,err
 		}
 	}
 
@@ -71,7 +73,8 @@ func AddChaos(clientset *kubernetes.Clientset, config *Config, service *v1.Servi
 
 		_, err := clientset.CoreV1().Pods(config.Namespace).UpdateStatus(pod.DeepCopy())
 		if err != nil {
-			return errors.New(fmt.Sprintf("fail to update pod status %s : %s", pod.Name, err))
+			err = errors.New(fmt.Sprintf("fail to update pod status %s : %s", pod.Name, err))
+			return previousReplica,err
 		}
 		PodsInChaos = append(PodsInChaos, pod.Name)
 	}
@@ -79,7 +82,7 @@ func AddChaos(clientset *kubernetes.Clientset, config *Config, service *v1.Servi
 	// Wait for response
 	for {
 		allReady := true
-		pods := GetPods(clientset, service)
+		pods := GetPods(clientset, service,0)
 
 		for _, pod := range pods.Items {
 			done, _ := pod.Annotations["kubernetes.io/done-egress-chaos"]
@@ -93,11 +96,11 @@ func AddChaos(clientset *kubernetes.Clientset, config *Config, service *v1.Servi
 		}
 		time.Sleep(time.Duration(50 * time.Millisecond))
 	}
-	return nil
+	return previousReplica,nil
 }
 
 // Clear chaos in the previous influenced pods
-func ClearChaos(clientset *kubernetes.Clientset, config *Config) {
+func ClearChaos(clientset *kubernetes.Clientset, config *Config,previousReplica int) {
 	// Find previous chaos pods
 	if PodsInChaos != nil {
 		glog.Infof("Clear previous chaos: %s...%d pod(s)", PodsInChaos[0], len(PodsInChaos))
@@ -156,7 +159,19 @@ func ClearChaos(clientset *kubernetes.Clientset, config *Config) {
 			time.Sleep(time.Duration(50 * time.Millisecond))
 		}
 
+		// Restore replicas
+		if previousReplica!=0{
+			pod, err = clientset.CoreV1().Pods(config.Namespace).Get(PodsInChaos[0], meta_v1.GetOptions{})
+			if err != nil {
+				glog.Errorf("Fail to get pod %s : %s", PodsInChaos[0], err)
+			}else {
+				ChangeReplicas(clientset,pod,int32(previousReplica),config.Namespace)
+			}
+
+		}
+
 		PodsInChaos = nil
+
 	}
 }
 
@@ -202,11 +217,11 @@ func CloseChaos(clientset *kubernetes.Clientset, config *Config) error {
 }
 
 // Control replicas via their deployment
-func ChangeReplicas(clientset *kubernetes.Clientset, pods *v1.PodList, replica int32, namespace string) {
+func ChangeReplicas(clientset *kubernetes.Clientset, pod *v1.Pod, replica int32, namespace string) (previousReplica int) {
 	if replica == 0 {
 		return
 	}
-	for _, cref := range pods.Items[0].OwnerReferences {
+	for _, cref := range pod.OwnerReferences {
 		if !*cref.Controller {
 			continue
 		}
@@ -221,10 +236,11 @@ func ChangeReplicas(clientset *kubernetes.Clientset, pods *v1.PodList, replica i
 			}
 			deployment, err := clientset.AppsV1().Deployments(namespace).Get(dref.Name, meta_v1.GetOptions{})
 			if err != nil {
-				glog.Errorf("Fail to find Deploymnet %s: %s", cref.Name, err)
+				glog.Errorf("Fail to find Deployment %s: %s", cref.Name, err)
 				continue
 			}
 			glog.V(3).Infof("Previous replicas: %d", *deployment.Spec.Replicas)
+			previousReplica=int(*deployment.Spec.Replicas)
 			deployment.Spec.Replicas = &replica
 
 			_, err = clientset.AppsV1().Deployments(namespace).Update(deployment.DeepCopy())
@@ -234,28 +250,29 @@ func ChangeReplicas(clientset *kubernetes.Clientset, pods *v1.PodList, replica i
 			}
 			deployment, err = clientset.AppsV1().Deployments(namespace).Get(dref.Name, meta_v1.GetOptions{})
 			if err != nil {
-				glog.Errorf("Fail to find Deploymnet %s: %s", cref.Name, err)
+				glog.Errorf("Fail to find Deployment %s: %s", cref.Name, err)
 				continue
 			}
-			glog.V(3).Infof("Deploymnet %s scaled to %d, waiting for them to ready...", deployment.Name, *deployment.Spec.Replicas)
+			glog.V(3).Infof("Deployment %s scaled to %d, waiting for them to ready...", deployment.Name, *deployment.Spec.Replicas)
 
 			// Loop for checking availability
 			for {
+				glog.V(3).Infof("Replicas total: %d available: %d ready: %d unavailable: %d",deployment.Status.Replicas, deployment.Status.AvailableReplicas,deployment.Status.ReadyReplicas,deployment.Status.UnavailableReplicas,)
 				// If all available, break to work
-				if deployment.Status.UnavailableReplicas == 0 {
+				if deployment.Status.AvailableReplicas == *deployment.Spec.Replicas {
 					glog.V(3).Infof("Replicas all ready")
 					break
 				}
 				// Else wait
-				glog.V(3).Infof("Unavailable replicas: %d", deployment.Status.UnavailableReplicas)
-				time.Sleep(50 * time.Millisecond)
+				time.Sleep(100 * time.Millisecond)
 				deployment, err = clientset.AppsV1().Deployments(namespace).Get(dref.Name, meta_v1.GetOptions{})
 				if err != nil {
-					glog.Errorf("Fail to find Deploymnet %s: %s", cref.Name, err)
+					glog.Errorf("Fail to find Deployment %s: %s", cref.Name, err)
 					continue
 				}
 			}
 		}
 	}
 
+	return
 }

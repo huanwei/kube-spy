@@ -56,28 +56,33 @@ func main() {
 				continue
 			}
 			// Detect network environment
-			cidrs, podNames := spy.GetPodsInfo(spy.GetPods(clientset, services[i]))
+			cidrs, podNames := spy.GetPodsInfo(spy.GetPods(clientset, services[i], 0))
 			delay, loss := spy.PingPods(cidrs)
 			spy.StorePingResults(services[i].Name, services[i].Namespace, nil, podNames, delay, loss)
 			// Chaos tests
+			var (
+				previousReplica = 0
+				err             error
+			)
 			for _, chaos := range spyConfig.VictimServices[i].ChaosList {
 				glog.Infof("Chaos test: Victim %s, Chaos %v", spyConfig.VictimServices[i].Name, chaos)
 				// Add chaos
-				err := spy.AddChaos(clientset, spyConfig, services[i], &chaos)
+				previousReplica, err = spy.AddChaos(clientset, spyConfig, services[i], &chaos)
 				if err != nil {
 					glog.Errorf("Adding chaos error: %s", err)
 				}
 				// Do tests
 				spy.Dotests(spyConfig, host, &spyConfig.VictimServices[i], &chaos)
 				// Detect network environment
-				cidrs, podNames := spy.GetPodsInfo(spy.GetPods(clientset, services[i]))
+				cidrs, podNames := spy.GetPodsInfo(spy.GetPods(clientset, services[i], 0))
 				delay, loss := spy.PingPods(cidrs)
 				spy.StorePingResults(services[i].Name, services[i].Namespace, &chaos, podNames, delay, loss)
 				// Clear chaos
-				spy.ClearChaos(clientset, spyConfig)
+				spy.ClearChaos(clientset, spyConfig,previousReplica)
 			}
 			// Detect network environment
-			cidrs, podNames = spy.GetPodsInfo(spy.GetPods(clientset, services[i]))
+			glog.V(3).Infof("Replicas should be restored to previous replicas: %d", previousReplica)
+			cidrs, podNames = spy.GetPodsInfo(spy.GetPods(clientset, services[i], previousReplica))
 			delay, loss = spy.PingPods(cidrs)
 			spy.StorePingResults(services[i].Name, services[i].Namespace, nil, podNames, delay, loss)
 		}

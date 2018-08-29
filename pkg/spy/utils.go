@@ -15,6 +15,7 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	"strconv"
 	"strings"
+	"time"
 )
 
 func GetConfig() *Config {
@@ -72,7 +73,7 @@ func GetServices(clientset *kubernetes.Clientset, config *Config) []*v1.Service 
 	return services
 }
 
-func GetPods(clientset *kubernetes.Clientset, service *v1.Service) *v1.PodList {
+func GetPods(clientset *kubernetes.Clientset, service *v1.Service, desired int) *v1.PodList {
 	// Find pods' selector
 	labelSelector := ""
 	for selector, value := range service.Spec.Selector {
@@ -83,9 +84,22 @@ func GetPods(clientset *kubernetes.Clientset, service *v1.Service) *v1.PodList {
 		}
 	}
 	// Get pods using selectors
-	pods, err := clientset.CoreV1().Pods("").List(meta_v1.ListOptions{LabelSelector: labelSelector})
-	if err != nil {
-		glog.Errorf(fmt.Sprintf("Failed to get pods of service %s:%s", service.Name, err))
+	var (
+		pods *v1.PodList
+		err  error
+	)
+
+	for {
+		pods, err = clientset.CoreV1().Pods("").List(meta_v1.ListOptions{LabelSelector: labelSelector})
+		if err != nil {
+			glog.Errorf(fmt.Sprintf("Failed to get pods of service %s:%s", service.Name, err))
+		}
+
+		if desired!=0 && desired!=len(pods.Items){
+			time.Sleep(50*time.Millisecond)
+			continue
+		}
+		break
 	}
 
 	return pods
@@ -144,12 +158,12 @@ func StorePingResults(serviceName, namespace string, chaos *Chaos, podNames, del
 	SendPingResults()
 }
 
-func GetPartPods(clientset *kubernetes.Clientset, service *v1.Service , Range string) []v1.Pod {
+func GetPartPods(clientset *kubernetes.Clientset, service *v1.Service, Range string) []v1.Pod {
 	var (
 		err error
 		num int
 	)
-	podlist:=GetPods(clientset,service)
+	podlist := GetPods(clientset, service,0)
 
 	// Default value: all pods
 	num = len(podlist.Items)

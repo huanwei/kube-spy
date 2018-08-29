@@ -15,7 +15,6 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	"strconv"
 	"strings"
-	"time"
 )
 
 func GetConfig() *Config {
@@ -73,7 +72,7 @@ func GetServices(clientset *kubernetes.Clientset, config *Config) []*v1.Service 
 	return services
 }
 
-func GetPods(clientset *kubernetes.Clientset, service *v1.Service, desired int) *v1.PodList {
+func GetPods(clientset *kubernetes.Clientset, service *v1.Service) *v1.PodList {
 	// Find pods' selector
 	labelSelector := ""
 	for selector, value := range service.Spec.Selector {
@@ -93,11 +92,6 @@ func GetPods(clientset *kubernetes.Clientset, service *v1.Service, desired int) 
 		pods, err = clientset.CoreV1().Pods("").List(meta_v1.ListOptions{LabelSelector: labelSelector})
 		if err != nil {
 			glog.Errorf(fmt.Sprintf("Failed to get pods of service %s:%s", service.Name, err))
-		}
-
-		if desired != 0 && desired != len(pods.Items) {
-			time.Sleep(50 * time.Millisecond)
-			continue
 		}
 		break
 	}

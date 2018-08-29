@@ -46,7 +46,7 @@ func AddChaos(clientset *kubernetes.Clientset, config *Config, service *v1.Servi
 	}
 
 	// Able to select some of the pods to do chaos
-	chaosPods := GetPartPods(GetPods(clientset, service, 0), chaos.Range)
+	chaosPods := GetPartPods(GetPods(clientset, service), chaos.Range)
 
 	// Open these pods' chaos
 	for _, pod := range chaosPods {
@@ -77,7 +77,7 @@ func AddChaos(clientset *kubernetes.Clientset, config *Config, service *v1.Servi
 	// Wait for response
 	for {
 		allReady := true
-		pods := GetPods(clientset, service, 0)
+		pods := GetPods(clientset, service)
 
 		for _, pod := range pods.Items {
 			done, _ := pod.Annotations["kubernetes.io/done-egress-chaos"]
@@ -158,7 +158,7 @@ func ClearChaos(clientset *kubernetes.Clientset, config *Config) {
 }
 
 // Close all chaos nodes' chaos
-func CloseChaos(clientset *kubernetes.Clientset, config *Config) error {
+func CloseChaos(clientset *kubernetes.Clientset) error {
 	// List all chaos nodes
 	nodes, err := clientset.CoreV1().Nodes().List(meta_v1.ListOptions{LabelSelector: "chaos=on"})
 	if err != nil {

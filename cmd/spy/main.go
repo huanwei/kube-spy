@@ -32,7 +32,7 @@ func main() {
 	defer spy.DBClient.Close()
 
 	// Close all previous chaos
-	spy.CloseChaos(clientset, spyConfig)
+	spy.CloseChaos(clientset)
 
 	var host string
 	// Get API server address
@@ -64,11 +64,11 @@ func main() {
 				glog.Infof("Chaos test: Victim %s, Chaos %v", spyConfig.VictimServices[i].Name, chaos)
 
 				// Control replicas
-				pods := spy.GetPods(clientset, services[i], 0)
+				pods := spy.GetPods(clientset, services[i])
 				previousReplica = spy.ChangeReplicas(clientset, &pods.Items[0], int32(chaos.Replica), spyConfig.Namespace)
 
 				// Get pods after changing replicas
-				pods = spy.GetPods(clientset, services[i], 0)
+				pods = spy.GetPods(clientset, services[i])
 
 				// Detect network environment before adding chaos
 				cidrs, podNames := spy.GetPodsInfo(pods)

@@ -70,12 +70,14 @@ func main() {
 				// Do tests
 				spy.Dotests(spyConfig, host, &spyConfig.VictimServices[i], &chaos)
 				// Detect network environment
+				cidrs, podNames := spy.GetPodsInfo(spy.GetPods(clientset, services[i]))
 				delay, loss := spy.PingPods(cidrs)
 				spy.StorePingResults(services[i].Name, services[i].Namespace, &chaos, podNames, delay, loss)
 				// Clear chaos
 				spy.ClearChaos(clientset, spyConfig)
 			}
 			// Detect network environment
+			cidrs, podNames = spy.GetPodsInfo(spy.GetPods(clientset, services[i]))
 			delay, loss = spy.PingPods(cidrs)
 			spy.StorePingResults(services[i].Name, services[i].Namespace, nil, podNames, delay, loss)
 		}

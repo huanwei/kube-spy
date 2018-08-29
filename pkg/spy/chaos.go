@@ -29,8 +29,7 @@ func AddChaos(clientset *kubernetes.Clientset, config *Config, service *v1.Servi
 	}
 
 	// Open these nodes' chaos
-	for name, node := range nodes {
-		glog.Info(name)
+	for _, node := range nodes {
 		newLabels := node.Labels
 		_, on := newLabels["chaos"]
 		if on {
@@ -238,7 +237,7 @@ func ChangeReplicas(clientset *kubernetes.Clientset, service *v1.Service, replic
 				glog.Errorf("Fail to find Deployment %s: %s", cref.Name, err)
 				continue
 			}
-			glog.V(3).Infof("Deployment %s scaled to %d, waiting for them to ready...", deployment.Name, *deployment.Spec.Replicas)
+			glog.V(3).Infof("Deployment %s scaled to %d, waiting for them to be ready...", deployment.Name, *deployment.Spec.Replicas)
 
 			if int(replica) >= previousReplica{
 				// Loop for checking availability

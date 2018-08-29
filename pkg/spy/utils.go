@@ -72,6 +72,15 @@ func GetServices(clientset *kubernetes.Clientset, config *Config) []*v1.Service 
 	return services
 }
 
+func GetService(clientset *kubernetes.Clientset, config *Config, serviceName string) (*v1.Service, error) {
+	service, err := clientset.CoreV1().Services(config.Namespace).Get(serviceName, meta_v1.GetOptions{})
+	if err != nil {
+		err = errors.New(fmt.Sprintf("Fail to get service %s : %s", service.Name, err))
+		return nil, err
+	}
+	return service, nil
+}
+
 func GetPods(clientset *kubernetes.Clientset, service *v1.Service) *v1.PodList {
 	// Find pods' selector
 	labelSelector := ""

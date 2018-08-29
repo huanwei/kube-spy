@@ -199,10 +199,13 @@ func CloseChaos(clientset *kubernetes.Clientset) error {
 }
 
 // Control replicas via their deployment
-func ChangeReplicas(clientset *kubernetes.Clientset, pod *v1.Pod, replica int32, namespace string) (previousReplica int) {
+func ChangeReplicas(clientset *kubernetes.Clientset, service *v1.Service, replica int32, namespace string) (previousReplica int) {
 	if replica == 0 {
 		return
 	}
+
+	pod := GetPods(clientset, service).Items[0]
+
 	for _, cref := range pod.OwnerReferences {
 		if !*cref.Controller {
 			continue
@@ -237,20 +240,38 @@ func ChangeReplicas(clientset *kubernetes.Clientset, pod *v1.Pod, replica int32,
 			}
 			glog.V(3).Infof("Deployment %s scaled to %d, waiting for them to ready...", deployment.Name, *deployment.Spec.Replicas)
 
-			// Loop for checking availability
-			for {
-				glog.V(3).Infof("Replicas total: %d available: %d ready: %d unavailable: %d", deployment.Status.Replicas, deployment.Status.AvailableReplicas, deployment.Status.ReadyReplicas, deployment.Status.UnavailableReplicas)
-				// If all available, break to work
-				if deployment.Status.AvailableReplicas == *deployment.Spec.Replicas {
-					glog.V(3).Infof("Replicas all ready")
-					break
+			if int(replica) >= previousReplica{
+				// Loop for checking availability
+				for {
+					glog.V(3).Infof("Replicas total: %d available: %d ready: %d unavailable: %d", deployment.Status.Replicas, deployment.Status.AvailableReplicas, deployment.Status.ReadyReplicas, deployment.Status.UnavailableReplicas)
+					// If all available, break to work
+					if deployment.Status.AvailableReplicas == *deployment.Spec.Replicas {
+						glog.V(3).Infof("Replicas all ready")
+						break
+					}
+					// Else wait
+					time.Sleep(100 * time.Millisecond)
+					deployment, err = clientset.AppsV1().Deployments(namespace).Get(dref.Name, meta_v1.GetOptions{})
+					if err != nil {
+						glog.Errorf("Fail to find Deployment %s: %s", cref.Name, err)
+						continue
+					}
 				}
-				// Else wait
-				time.Sleep(100 * time.Millisecond)
-				deployment, err = clientset.AppsV1().Deployments(namespace).Get(dref.Name, meta_v1.GetOptions{})
-				if err != nil {
-					glog.Errorf("Fail to find Deployment %s: %s", cref.Name, err)
-					continue
+			} else {
+				// Loop for checking terminating
+				for {
+					// If all available, break to work
+					if len(GetPods(clientset, service).Items) == int(*deployment.Spec.Replicas) {
+						glog.V(3).Infof("Replicas all ready")
+						break
+					}
+					// Else wait
+					time.Sleep(500 * time.Millisecond)
+					deployment, err = clientset.AppsV1().Deployments(namespace).Get(dref.Name, meta_v1.GetOptions{})
+					if err != nil {
+						glog.Errorf("Fail to find Deployment %s: %s", cref.Name, err)
+						continue
+					}
 				}
 			}
 		}

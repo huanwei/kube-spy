@@ -138,7 +138,7 @@ func PingPods(serviceName, namespace string, chaos *Chaos, podNames, cidrs []str
 				}
 			}
 		}
-		glog.Infof(fmt.Sprintf("ping %s loss:%s rtt:%s", cidr, loss, delay))
+		glog.Infof(fmt.Sprintf("ping %s loss:%s %s", cidr, loss, delay))
 		AddPingResult(serviceName, namespace, chaos, podNames[i], delay, loss)
 	}
 	SendPingResults()

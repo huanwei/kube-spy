@@ -34,22 +34,19 @@ func main() {
 	// Close all previous chaos
 	spy.CloseChaos(clientset)
 
-	var host string
-	// Get API server address
-	if spyConfig.APIServerAddr == "" {
-		host = services[0].Spec.ClusterIP
-	} else {
-		host = spyConfig.APIServerAddr
+	// Account testcase number
+	testCaseNum := 0
+	for _, testcaselist := range spyConfig.TestCaseLists {
+		testCaseNum += len(testcaselist.TestCases)
 	}
-
-	glog.Infof("There are %d services, %d test cases in the list", len(spyConfig.VictimServices), len(spyConfig.TestCases))
+	glog.Infof("There are %d services, %d testcase lists, %d testcases in config", len(spyConfig.VictimServices), len(spyConfig.TestCaseLists), testCaseNum)
 
 	// Len(chaos) + 1 tests, first one as normal test
 	for i := -1; i < len(services); i++ {
 		if i == -1 {
 			// Normal test
 			glog.Infof("None chaos test")
-			spy.Dotests(spyConfig, host, nil, nil)
+			spy.Dotests(clientset, spyConfig, nil, nil)
 		} else {
 			// No chaos for this service, skip
 			if len(spyConfig.VictimServices[i].ChaosList) == 0 {
@@ -81,7 +78,7 @@ func main() {
 				}
 
 				// Do API tests
-				spy.Dotests(spyConfig, host, &spyConfig.VictimServices[i], &chaos)
+				spy.Dotests(clientset, spyConfig, &spyConfig.VictimServices[i], &chaos)
 
 				// Detect network environment under chaos
 				spy.PingPods(services[i].Name, services[i].Namespace, &chaos, podNames, cidrs)

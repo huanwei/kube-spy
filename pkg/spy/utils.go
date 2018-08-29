@@ -139,7 +139,7 @@ func PingPods(serviceName, namespace string, chaos *Chaos, podNames, cidrs []str
 				// Get loss line
 				if strings.Contains(line, "transmitted") {
 					parts := strings.Split(line, " ")
-					loss = strings.Split(parts[5], "!")[0]
+					loss = strings.Split(parts[5], "!")[0] + "%"
 				}
 				// Get delay statistics line
 				if strings.Contains(line, "rtt") {

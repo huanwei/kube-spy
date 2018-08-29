@@ -4,18 +4,20 @@ Namespace: "default"
 # Your service list, the first one will be considered the API server
 VictimServices:
 - name: "http-test-service1"
-  chaosList:
+  ChaosList:
   - replica: 1
     ingress: ",delay,50ms"
     egress: ",delay,50ms"
 - name: "http-test-service2"
-  chaosList:
-  - ingress: ",delay,50ms"
-    egress: ",delay,50ms"
+#  ChaosList:
+#  - ingress: ",delay,50ms"
+#    egress: ",delay,50ms"
+#    replica: 1
+#    range: 1
 - name: "http-test-service3"
-  chaosList:
-  - ingress: ",delay,50ms"
-    egress: ",delay,50ms"
+#  ChaosList:
+#  - ingress: ",delay,50ms"
+#    egress: ",delay,50ms"
 
 # This can override the address of the API server to enable out-of-cluster test
 #APIServerAddr: "httpbin.org"
@@ -27,15 +29,20 @@ APISetting:
 #    Content-Type: "application/json"
 
 # These test case will be tested in every loop
-TestCases:
-# Set request json body and headers
+TestCaseLists:
+- service: "http-test-service1"
+#  host: "httpbin.org"
+  TestCases:
+  - method: "GET"
+    url: "/"
+## Set request json body and headers
 #  - method: "GET"
 #    url: "/headers"
 #    headers:
 #      Content-Type: "application/json"
 #    body: "{ languages: [ 'Ruby', 'Perl', 'Python', 'c' ] }"
 
-# Set form and files
+## Set form and files
 #  - method: "POST"
 #    url: "/post"
 #    form:
@@ -46,15 +53,15 @@ TestCases:
 #      2: "/tmp/spy.INFO"
 
 
-# Set query params and bearer auth
+## Set query params and bearer auth
 #  - method: "Get"
 #    url: "/get"
 #    params:
 #      data: "a"
 #    headers:
 #    authToken: "C6A79608-782F-4ED0-A11D-BD82FAD829CD"
-
-# Set multi value form and params
+#
+## Set multi value form and params
 #  - method: "Post"
 #    url: "/post"
 #    multiValueForm:
@@ -70,16 +77,16 @@ TestCases:
 #      text:
 #        - "c"
 
-# Set path params
+## Set path params
 #  - method: "Get"
 #    url: "/base64/{value}"
 #    pathParams:
 #      value: "a3ViZS1zcHk="
 
-# Set basic auth
-- method: "get"
-  url: "/"
-#    basicAuth:
+## Set basic auth
+#  - method: "get"
+#    url: "/"
+#    BasicAuth:
 #      username: "root"
 #      password: "123456"
 
@@ -87,7 +94,7 @@ TestCases:
 # Client retry settings
 ClientSetting:
   retryCount: 0
-# unit: microseconds
+# unit: milliseconds
   retryWait: 1000
   retryMaxWait: 1000
-  timeout: 3000
+  timeout: 500

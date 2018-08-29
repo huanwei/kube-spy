@@ -8,7 +8,7 @@ type TestCase struct {
 	BasicAuth struct {
 		Username string `yaml:"username"`
 		Password string `yaml:"password"`
-	} `yaml:"basicAuth"`
+	} `yaml:"BasicAuth"`
 	Headers     map[string]string   `yaml:"headers"`
 	Form        map[string]string   `yaml:"form"`
 	MultiForm   map[string][]string `yaml:"multiValueForm"`
@@ -18,8 +18,17 @@ type TestCase struct {
 	Body        string              `yaml:"body"`
 }
 
+type TestCaseList struct {
+	Service       string        `yaml:"service"`
+	Host          string        `yaml:"host"`
+	APIsetting    TestCase      `yaml:"APIsetting"`
+	ClientSetting ClientSetting `yaml:"ClientSetting"`
+	TestCases     []TestCase    `yaml:"TestCases"`
+}
+
 type Chaos struct {
 	Replica int    `yaml:"replica"`
+	Range   string `yaml:"range"`
 	Ingress string `yaml:"ingress"`
 	Egress  string `yaml:"egress"`
 }
@@ -33,14 +42,13 @@ type ClientSetting struct {
 
 type VictimService struct {
 	Name      string  `yaml:"name"`
-	ChaosList []Chaos `yaml:"chaosList"`
+	ChaosList []Chaos `yaml:"ChaosList"`
 }
 
 type Config struct {
 	Namespace      string          `yaml:"Namespace"`
 	VictimServices []VictimService `yaml:"VictimServices"`
-	APIServerAddr  string          `yaml:"APIServerAddr"`
-	APISetting     TestCase        `yaml:"APISettings"`
-	TestCases      []TestCase      `yaml:"TestCases"`
+	APISetting     TestCase        `yaml:"APISetting"`
 	ClientSetting  ClientSetting   `yaml:"ClientSetting"`
+	TestCaseLists  []TestCaseList  `yaml:"TestCaseLists"`
 }

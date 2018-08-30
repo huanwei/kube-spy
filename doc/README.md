@@ -99,6 +99,12 @@ struct {
 	Timeout      int `yaml:"timeout"`
 }
 ```
+本参数设置http测试用客户端的重试和超时设置，其中
+
+* `retryCount`指定重试次数，非零时客户端在请求超时后会进行指定次的重试，指定为零时不进行重试
+* `retryWait`指定重试间隔，
+
+
 #### `TestCaseLists` 测试用例列表组
 ```
 # These test case will be tested in every loop

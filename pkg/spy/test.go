@@ -21,8 +21,12 @@ func ConfigHTTPClient(client *resty.Client, APIsetting *TestCase, Clientsetting 
 
 	if Clientsetting.RetryCount > 0 {
 		client.SetRetryCount(Clientsetting.RetryCount)
-		client.SetRetryWaitTime(time.Duration(Clientsetting.RetryWait) * time.Millisecond)
-		client.SetRetryMaxWaitTime(time.Duration(Clientsetting.RetryMaxWait) * time.Millisecond)
+		if Clientsetting.RetryWait>0{
+			client.SetRetryWaitTime(time.Duration(Clientsetting.RetryWait) * time.Millisecond)
+		}
+		if Clientsetting.RetryMaxWait>0{
+			client.SetRetryMaxWaitTime(time.Duration(Clientsetting.RetryMaxWait) * time.Millisecond)
+		}
 	}
 
 	if Clientsetting.Timeout != 0 {

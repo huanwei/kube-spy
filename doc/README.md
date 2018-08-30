@@ -370,5 +370,37 @@ body: "{ languages: [ 'Ruby', 'Perl', 'Python', 'c' ] }"
 ```
 
 ## 故障参数说明
+kube-spy与kube-chaos协作完成集群中pod的故障注入。
+
+而kube-chaos通过Linux内核中内置的netem模块进行故障的注入，可以使用参数启用netem的所有功能。
+
+kube-chaos的入境/出境流量故障参数分为两个部分，格式为:
+
+`[rate],[netem arg1],[netem arg2],[netem arg3],...`
+
+其中，`rate`指定速率限制，`netem arg`指定netem参数，样例：`10kbps,delay,100ms`
+
+这个例子的效果是：限制带宽上限到10KB/s，并且每个数据包固定增加一个100ms的延迟。
+
+### `rate`
+可使用的速率单位：
+				
+	bit or a bare number	Bits per second
+	kbit	Kilobits per second
+	mbit	Megabits per second
+	gbit	Gigabits per second
+	tbit	Terabits per second
+	bps		Bytes per second
+	kbps	Kilobytes per second
+	mbps	Megabytes per second
+	gbps	Gigabytes per second
+	
+需要注意的是，限速的上限为4gibps,不支持更高的限速（由于内核中的限速速率由一个单位为bits/s的32位的无符号整数来储存）
+>如果用IEC单位表示,则将SI的前缀（k-, m-, g-)替换为IEC的前缀(ki-, mi-, gi-)。
+>
+>另外也可以用一个百分数比如`50%`来表示占当前设备速率的百分比。
+
+### `netem arg`
+netem的参数详见本目录下另一个[文档](./netem.md)
 ## 流程图
 ![](img/execProcess.png)

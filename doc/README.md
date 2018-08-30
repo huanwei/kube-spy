@@ -77,8 +77,28 @@ APISetting:
 ```
 在这里可以为所有API测试用例进行设置，比如设置权限认证，或者请求头等，本参数格式与单个的测试用例相同。
 
-如果在随后的测试用例中有与本设置冲突的参数，则优先使用测试用例中的设置。
+如果在随后的测试用例中有与本设置冲突的参数，则优先使用测试用例中的设置。在每个测试用例组中也可以设置本参数，在发生冲突时，它们的优先级是`单个测试用例>组设置>全局设置`
 
+#### *`ClientSetting` 客户端全局设置
+##### 样例
+```
+# Client retry settings
+ClientSetting:
+  retryCount: 0
+  retryWait: 1000
+  retryMaxWait: 1000
+  timeout: 3000
+
+```
+##### 结构
+```
+struct {
+	RetryCount   int `yaml:"retryCount"`
+	RetryWait    int `yaml:"retryWait"`
+	RetryMaxWait int `yaml:"retryMaxWait"`
+	Timeout      int `yaml:"timeout"`
+}
+```
 #### `TestCaseLists` 测试用例列表组
 ```
 # These test case will be tested in every loop
@@ -144,6 +164,7 @@ TestCaseLists:
       password: "123456"
 ```
 #### 结构
+#### 参数说明
 本参数可以指定多个测试用例组，每个组可以有独立的host、APISetting和ClientSetting，
 #### *`APIServerAddr` 服务接口地址
 ```
@@ -151,17 +172,7 @@ TestCaseLists:
 APIServerAddr: "httpbin.org"
 ```
 本参数指定应用对外的API接口地址，如果不指定，则默认为`VictimServices`中第一个服务的地址。后续的API测试都将对这个地址发起请求。
-#### *`ClientSetting` 客户端设置
 
-```
-# Client retry settings
-ClientSetting:
-  retryCount: 0
-  retryWait: 1000
-  retryMaxWait: 1000
-  timeout: 3000
-
-```
 
 ## 流程图
 ![](img/execProcess.png)

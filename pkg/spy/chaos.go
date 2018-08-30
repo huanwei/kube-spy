@@ -88,7 +88,7 @@ func AddChaos(clientset *kubernetes.Clientset, config *Config, service *v1.Servi
 		if allReady {
 			break
 		}
-		time.Sleep(time.Duration(50 * time.Millisecond))
+		time.Sleep(time.Duration(200 * time.Millisecond))
 	}
 	return nil
 }

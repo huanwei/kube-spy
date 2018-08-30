@@ -117,7 +117,7 @@ func GetPodsInfo(pods *v1.PodList) (cidrs, podNames []string) {
 	return cidrs, podNames
 }
 
-func PingPods(serviceName, namespace string, podNames, cidrs []string, chaos *Chaos, stop chan bool) {
+func PingPods(serviceName, namespace string, podNames, cidrs []string, chaos *Chaos, stop, complete chan bool) {
 	finished := make(chan bool, len(cidrs))
 
 	for i := range cidrs {
@@ -127,16 +127,17 @@ func PingPods(serviceName, namespace string, podNames, cidrs []string, chaos *Ch
 		<-finished
 	}
 	SendPingResults()
+	complete <- true
 }
 
 func PingPod(serviceName, namespace, podName, cidr string, chaos *Chaos, finished chan bool, stop chan bool) {
-	var(
-		loss string
-		delay string
-		output string
-		index int
-		data []byte
-		err error
+	var (
+		loss      string
+		delay     string
+		output    string
+		index     int
+		data      []byte
+		err       error
 		timestamp time.Time
 	)
 
@@ -153,7 +154,7 @@ func PingPod(serviceName, namespace, podName, cidr string, chaos *Chaos, finishe
 		} else {
 			output = string(data)
 			index = strings.Index(output, "%")
-			loss = output[index-1:index] +"%%"
+			loss = output[index-1:index] + "%%"
 			index = strings.Index(output, "rtt")
 			delay = output[index:]
 		}

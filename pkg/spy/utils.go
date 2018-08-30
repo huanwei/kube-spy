@@ -1,7 +1,6 @@
 package spy
 
 import (
-	"bufio"
 	"bytes"
 	"errors"
 	"fmt"
@@ -130,34 +129,27 @@ func PingPods(serviceName, namespace string, podNames, cidrs []string, chaos *Ch
 }
 
 func PingPod(serviceName, namespace, podName, cidr string, chaos *Chaos, finished chan bool, stop chan bool) {
-	var loss, delay string
+	var(
+		loss string
+		delay string
+		index int
+		data []byte
+		err error
+	)
 
 	e := exec.New()
 	for {
 		// Ping ip of pod 100 times in 1 sec
-		data, err := e.Command("ping", "-i", "0.001", "-c", "100", "-q", cidr).CombinedOutput()
+		data, err = e.Command("ping", "-i", "0.001", "-c", "100", "-q", cidr).CombinedOutput()
 		if err != nil {
 			glog.Infof(fmt.Sprintf("Failed to ping %s:%s", cidr, err))
 			loss = "100%"
 			delay = "Timeout"
 		} else {
-			// Scan the ping statistics
-			scanner := bufio.NewScanner(bytes.NewBuffer(data))
-			for scanner.Scan() {
-				line := strings.TrimSpace(scanner.Text())
-				if len(line) == 0 {
-					continue
-				}
-				// Get loss line
-				if strings.Contains(line, "transmitted") {
-					parts := strings.Split(line, " ")
-					loss = strings.Split(parts[5], "!")[0] + "%"
-				}
-				// Get delay statistics line
-				if strings.Contains(line, "rtt") {
-					delay = line
-				}
-			}
+			index = strings.Index(string(data), "%")
+			loss = string(data)[index-1:index]
+			index = strings.Index(string(data), "rtt")
+			delay = string(data)[index:]
 		}
 		glog.Infof(fmt.Sprintf("ping %s loss:%s %s", cidr, loss, delay))
 		AddPingResult(serviceName, namespace, chaos, podName, delay, loss)

@@ -403,4 +403,7 @@ kube-chaos的入境/出境流量故障参数分为两个部分，格式为:
 ### `netem arg`
 netem的参数详见本目录下另一个[文档](./netem.md)
 ## 流程图
+### 用户部署流程图
+![](img/userProcess.png)
+### kube-spy执行流程图
 ![](img/execProcess.png)

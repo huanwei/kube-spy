@@ -117,11 +117,11 @@ func GetPodsInfo(pods *v1.PodList) (cidrs, podNames []string) {
 	return cidrs, podNames
 }
 
-func PingPods(serviceName, namespace string, podNames, cidrs []string, chaos *Chaos, stop, complete chan bool) {
+func PingPods(serviceName, namespace string, podNames, cidrs []string, chaos *Chaos, stop, complete chan bool, pingTimeout int) {
 	finished := make(chan bool, len(cidrs))
 
 	for i := range cidrs {
-		go PingPod(serviceName, namespace, podNames[i], cidrs[i], chaos, finished, stop)
+		go PingPod(serviceName, namespace, podNames[i], cidrs[i], chaos, finished, stop, pingTimeout)
 	}
 	for range cidrs {
 		<-finished
@@ -130,7 +130,7 @@ func PingPods(serviceName, namespace string, podNames, cidrs []string, chaos *Ch
 	complete <- true
 }
 
-func PingPod(serviceName, namespace, podName, cidr string, chaos *Chaos, finished chan bool, stop chan bool) {
+func PingPod(serviceName, namespace, podName, cidr string, chaos *Chaos, finished chan bool, stop chan bool, pingTimeout int) {
 	var (
 		loss      string
 		delay     string
@@ -145,7 +145,7 @@ func PingPod(serviceName, namespace, podName, cidr string, chaos *Chaos, finishe
 	for {
 		// Ping ip of pod 100 times in 1 sec
 		timestamp = time.Now()
-		data, err = e.Command("ping", "-i", "0.001", "-c", "100", "-q", cidr).CombinedOutput()
+		data, err = e.Command("ping", "-i", "0.001", "-c", "100", "-W", string(pingTimeout), "-q", cidr).CombinedOutput()
 		timestamp = time.Now().Add(timestamp.Sub(time.Now()) / 2)
 		if err != nil {
 			glog.Infof(fmt.Sprintf("Failed to ping %s:%s", cidr, err))

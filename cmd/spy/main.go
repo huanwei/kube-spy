@@ -4,6 +4,7 @@ import (
 	"flag"
 	"github.com/golang/glog"
 	"github.com/huanwei/kube-spy/pkg/spy"
+	"time"
 )
 
 //spy program entrypoint
@@ -52,6 +53,9 @@ func main() {
 			if len(spyConfig.VictimServices[i].ChaosList) == 0 {
 				continue
 			}
+			if spyConfig.VictimServices[i].PingTimeout == 0 {
+				spyConfig.VictimServices[i].PingTimeout = 1
+			}
 			for _, chaos := range spyConfig.VictimServices[i].ChaosList {
 				stop := make(chan bool, 1)
 				complete := make(chan bool, 1)
@@ -65,20 +69,20 @@ func main() {
 
 				// Detect network environment before adding chaos
 				cidrs, podNames := spy.GetPodsInfo(pods)
-				go spy.PingPods(services[i].Name, services[i].Namespace, podNames, cidrs, nil, stop, complete)
+				go spy.PingPods(services[i].Name, services[i].Namespace, podNames, cidrs, nil, stop, complete, spyConfig.VictimServices[i].PingTimeout)
 
 				// Add chaos
 				err := spy.AddChaos(clientset, spyConfig, services[i], &chaos, pods)
 				if err != nil {
 					glog.Errorf("Adding chaos error: %s", err)
 				}
-
+				time.Sleep(time.Duration(spyConfig.VictimServices[i].PingTimeout) * time.Second)
 				// Do API tests
 				spy.Dotests(clientset, spyConfig, &spyConfig.VictimServices[i], &chaos)
 
 				//// Detect network environment under chaos
 				//spy.PingPods(services[i].Name, services[i].Namespace, podNames, cidrs, &chaos,stop)
-
+				time.Sleep(time.Duration(spyConfig.VictimServices[i].PingTimeout) * time.Second)
 				// Clear chaos
 				spy.ClearChaos(clientset, spyConfig)
 

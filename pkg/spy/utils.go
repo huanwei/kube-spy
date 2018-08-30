@@ -133,7 +133,7 @@ func PingPod(serviceName, namespace, podName, cidr string, chaos *Chaos, finishe
 
 	e := exec.New()
 	// Ping ip of pod 100 times in 1 sec
-	data, err := e.Command("ping", "-i", "0.001", "-c", "20", "-q", cidr).CombinedOutput()
+	data, err := e.Command("ping", "-i", "0.001", "-c", "100", "-q", cidr).CombinedOutput()
 	if err != nil {
 		glog.Infof(fmt.Sprintf("Failed to ping %s:%s", cidr, err))
 		loss = "100%"

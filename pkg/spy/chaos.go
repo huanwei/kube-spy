@@ -249,7 +249,7 @@ func ChangeReplicas(clientset *kubernetes.Clientset, service *v1.Service, replic
 						break
 					}
 					// Else wait
-					time.Sleep(100 * time.Millisecond)
+					time.Sleep(1000 * time.Millisecond)
 					deployment, err = clientset.AppsV1().Deployments(namespace).Get(dref.Name, meta_v1.GetOptions{})
 					if err != nil {
 						glog.Errorf("Fail to find Deployment %s: %s", cref.Name, err)

@@ -53,6 +53,7 @@ func main() {
 				continue
 			}
 			for _, chaos := range spyConfig.VictimServices[i].ChaosList {
+				stop := make(chan bool, 1)
 				glog.Infof("Chaos test: Victim %s, Chaos %v", spyConfig.VictimServices[i].Name, chaos)
 
 				// Control replicas
@@ -63,7 +64,7 @@ func main() {
 
 				// Detect network environment before adding chaos
 				cidrs, podNames := spy.GetPodsInfo(pods)
-				spy.PingPods(services[i].Name, services[i].Namespace, podNames, cidrs, nil)
+				spy.PingPods(services[i].Name, services[i].Namespace, podNames, cidrs, nil, stop)
 
 				// Add chaos
 				err := spy.AddChaos(clientset, spyConfig, services[i], &chaos, pods)
@@ -74,14 +75,15 @@ func main() {
 				// Do API tests
 				spy.Dotests(clientset, spyConfig, &spyConfig.VictimServices[i], &chaos)
 
-				// Detect network environment under chaos
-				spy.PingPods(services[i].Name, services[i].Namespace, podNames, cidrs, &chaos)
+				//// Detect network environment under chaos
+				//spy.PingPods(services[i].Name, services[i].Namespace, podNames, cidrs, &chaos,stop)
 
 				// Clear chaos
 				spy.ClearChaos(clientset, spyConfig)
 
-				// Detect network environment after removing chaos
-				spy.PingPods(services[i].Name, services[i].Namespace, podNames, cidrs, nil)
+				stop <- true
+				//// Detect network environment after removing chaos
+				//spy.PingPods(services[i].Name, services[i].Namespace, podNames, cidrs, nil)
 
 				// Restore replicas
 				spy.ChangeReplicas(clientset, services[i], int32(previousReplica), spyConfig.Namespace)

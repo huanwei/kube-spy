@@ -117,10 +117,11 @@ func GetPodsInfo(pods *v1.PodList) (cidrs, podNames []string) {
 	return cidrs, podNames
 }
 
-func PingPods(serviceName, namespace string, podNames, cidrs []string, chaos *Chaos) {
+func PingPods(serviceName, namespace string, podNames, cidrs []string, chaos *Chaos, stop chan bool) {
 	finished := make(chan bool, len(cidrs))
+
 	for i := range cidrs {
-		go PingPod(serviceName, namespace, podNames[i], cidrs[i], chaos, finished)
+		go PingPod(serviceName, namespace, podNames[i], cidrs[i], chaos, finished, stop)
 	}
 	for range cidrs {
 		<-finished
@@ -128,37 +129,42 @@ func PingPods(serviceName, namespace string, podNames, cidrs []string, chaos *Ch
 	SendPingResults()
 }
 
-func PingPod(serviceName, namespace, podName, cidr string, chaos *Chaos, finished chan bool) {
+func PingPod(serviceName, namespace, podName, cidr string, chaos *Chaos, finished chan bool, stop chan bool) {
 	var loss, delay string
 
 	e := exec.New()
-	// Ping ip of pod 100 times in 1 sec
-	data, err := e.Command("ping", "-i", "0.001", "-c", "100", "-q", cidr).CombinedOutput()
-	if err != nil {
-		glog.Infof(fmt.Sprintf("Failed to ping %s:%s", cidr, err))
-		loss = "100%"
-		delay = "Timeout"
-	} else {
-		// Scan the ping statistics
-		scanner := bufio.NewScanner(bytes.NewBuffer(data))
-		for scanner.Scan() {
-			line := strings.TrimSpace(scanner.Text())
-			if len(line) == 0 {
-				continue
-			}
-			// Get loss line
-			if strings.Contains(line, "transmitted") {
-				parts := strings.Split(line, " ")
-				loss = strings.Split(parts[5], "!")[0] + "%"
-			}
-			// Get delay statistics line
-			if strings.Contains(line, "rtt") {
-				delay = line
+	for {
+		// Ping ip of pod 100 times in 1 sec
+		data, err := e.Command("ping", "-i", "0.001", "-c", "100", "-q", cidr).CombinedOutput()
+		if err != nil {
+			glog.Infof(fmt.Sprintf("Failed to ping %s:%s", cidr, err))
+			loss = "100%"
+			delay = "Timeout"
+		} else {
+			// Scan the ping statistics
+			scanner := bufio.NewScanner(bytes.NewBuffer(data))
+			for scanner.Scan() {
+				line := strings.TrimSpace(scanner.Text())
+				if len(line) == 0 {
+					continue
+				}
+				// Get loss line
+				if strings.Contains(line, "transmitted") {
+					parts := strings.Split(line, " ")
+					loss = strings.Split(parts[5], "!")[0] + "%"
+				}
+				// Get delay statistics line
+				if strings.Contains(line, "rtt") {
+					delay = line
+				}
 			}
 		}
+		glog.Infof(fmt.Sprintf("ping %s loss:%s %s", cidr, loss, delay))
+		AddPingResult(serviceName, namespace, chaos, podName, delay, loss)
+		if len(stop) != 1 {
+			break
+		}
 	}
-	glog.Infof(fmt.Sprintf("ping %s loss:%s %s", cidr, loss, delay))
-	AddPingResult(serviceName, namespace, chaos, podName, delay, loss)
 	finished <- true
 }
 

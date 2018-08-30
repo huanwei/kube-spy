@@ -161,7 +161,7 @@ func PingPod(serviceName, namespace, podName, cidr string, chaos *Chaos, finishe
 		}
 		glog.Infof(fmt.Sprintf("ping %s loss:%s %s", cidr, loss, delay))
 		AddPingResult(serviceName, namespace, chaos, podName, delay, loss)
-		if len(stop) != 1 {
+		if len(stop) == 1 {
 			break
 		}
 	}

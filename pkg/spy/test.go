@@ -21,8 +21,12 @@ func ConfigHTTPClient(client *resty.Client, APIsetting *TestCase, Clientsetting 
 
 	if Clientsetting.RetryCount > 0 {
 		client.SetRetryCount(Clientsetting.RetryCount)
-		client.SetRetryWaitTime(time.Duration(Clientsetting.RetryWait) * time.Millisecond)
-		client.SetRetryMaxWaitTime(time.Duration(Clientsetting.RetryMaxWait) * time.Millisecond)
+		if Clientsetting.RetryWait>0{
+			client.SetRetryWaitTime(time.Duration(Clientsetting.RetryWait) * time.Millisecond)
+		}
+		if Clientsetting.RetryMaxWait>0{
+			client.SetRetryMaxWaitTime(time.Duration(Clientsetting.RetryMaxWait) * time.Millisecond)
+		}
 	}
 
 	if Clientsetting.Timeout != 0 {
@@ -111,7 +115,7 @@ func Dotests(clientset *kubernetes.Clientset, config *Config, service *VictimSer
 		// Apply global http client settings
 		ConfigHTTPClient(client, &config.APISetting, &config.ClientSetting)
 		// Apply local http client settings
-		ConfigHTTPClient(client, &testcases.APIsetting, &testcases.ClientSetting)
+		ConfigHTTPClient(client, &testcases.APISetting, &testcases.ClientSetting)
 		// Find host
 		var host string
 		if testcases.Host == "" {

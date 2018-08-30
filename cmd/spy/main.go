@@ -4,6 +4,7 @@ import (
 	"flag"
 	"github.com/golang/glog"
 	"github.com/huanwei/kube-spy/pkg/spy"
+	"time"
 )
 
 //spy program entrypoint
@@ -52,7 +53,12 @@ func main() {
 			if len(spyConfig.VictimServices[i].ChaosList) == 0 {
 				continue
 			}
+			if spyConfig.VictimServices[i].PingTimeout == 0 {
+				spyConfig.VictimServices[i].PingTimeout = 1
+			}
 			for _, chaos := range spyConfig.VictimServices[i].ChaosList {
+				stop := make(chan bool, 1)
+				complete := make(chan bool, 1)
 				glog.Infof("Chaos test: Victim %s, Chaos %v", spyConfig.VictimServices[i].Name, chaos)
 
 				// Control replicas
@@ -63,25 +69,27 @@ func main() {
 
 				// Detect network environment before adding chaos
 				cidrs, podNames := spy.GetPodsInfo(pods)
-				spy.PingPods(services[i].Name, services[i].Namespace, nil, podNames, cidrs)
+				go spy.PingPods(services[i].Name, services[i].Namespace, podNames, cidrs, nil, stop, complete, spyConfig.VictimServices[i].PingTimeout)
 
 				// Add chaos
 				err := spy.AddChaos(clientset, spyConfig, services[i], &chaos, pods)
 				if err != nil {
 					glog.Errorf("Adding chaos error: %s", err)
 				}
-
+				time.Sleep(time.Duration(spyConfig.VictimServices[i].PingTimeout) * time.Second)
 				// Do API tests
 				spy.Dotests(clientset, spyConfig, &spyConfig.VictimServices[i], &chaos)
 
-				// Detect network environment under chaos
-				spy.PingPods(services[i].Name, services[i].Namespace, &chaos, podNames, cidrs)
-
+				//// Detect network environment under chaos
+				//spy.PingPods(services[i].Name, services[i].Namespace, podNames, cidrs, &chaos,stop)
+				time.Sleep(time.Duration(spyConfig.VictimServices[i].PingTimeout) * time.Second)
 				// Clear chaos
 				spy.ClearChaos(clientset, spyConfig)
 
-				// Detect network environment after removing chaos
-				spy.PingPods(services[i].Name, services[i].Namespace, nil, podNames, cidrs)
+				stop <- true
+				<-complete
+				//// Detect network environment after removing chaos
+				//spy.PingPods(services[i].Name, services[i].Namespace, podNames, cidrs, nil)
 
 				// Restore replicas
 				spy.ChangeReplicas(clientset, services[i], int32(previousReplica), spyConfig.Namespace)

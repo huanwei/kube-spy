@@ -88,7 +88,7 @@ func AddChaos(clientset *kubernetes.Clientset, config *Config, service *v1.Servi
 		if allReady {
 			break
 		}
-		time.Sleep(time.Duration(50 * time.Millisecond))
+		time.Sleep(time.Duration(200 * time.Millisecond))
 	}
 	return nil
 }
@@ -150,7 +150,7 @@ func ClearChaos(clientset *kubernetes.Clientset, config *Config) {
 			if allReady {
 				break
 			}
-			time.Sleep(time.Duration(50 * time.Millisecond))
+			time.Sleep(time.Duration(200 * time.Millisecond))
 		}
 		PodsInChaos = nil
 	}
@@ -189,7 +189,7 @@ func CloseChaos(clientset *kubernetes.Clientset) error {
 		}
 		glog.V(3).Infof("Check nodes' chaos, try no. %d", cnt)
 		cnt++
-		time.Sleep(100 * time.Millisecond)
+		time.Sleep(200 * time.Millisecond)
 	}
 
 	glog.V(3).Infof("Chaos cleared")
@@ -239,7 +239,7 @@ func ChangeReplicas(clientset *kubernetes.Clientset, service *v1.Service, replic
 			}
 			glog.V(3).Infof("Deployment %s scaled to %d, waiting for them to be ready...", deployment.Name, *deployment.Spec.Replicas)
 
-			if int(replica) >= previousReplica{
+			if int(replica) >= previousReplica {
 				// Loop for checking availability
 				for {
 					glog.V(3).Infof("Replicas total: %d available: %d ready: %d unavailable: %d", deployment.Status.Replicas, deployment.Status.AvailableReplicas, deployment.Status.ReadyReplicas, deployment.Status.UnavailableReplicas)
@@ -249,7 +249,7 @@ func ChangeReplicas(clientset *kubernetes.Clientset, service *v1.Service, replic
 						break
 					}
 					// Else wait
-					time.Sleep(100 * time.Millisecond)
+					time.Sleep(1000 * time.Millisecond)
 					deployment, err = clientset.AppsV1().Deployments(namespace).Get(dref.Name, meta_v1.GetOptions{})
 					if err != nil {
 						glog.Errorf("Fail to find Deployment %s: %s", cref.Name, err)

@@ -21,7 +21,7 @@ type TestCase struct {
 type TestCaseList struct {
 	Service       string        `yaml:"service"`
 	Host          string        `yaml:"host"`
-	APIsetting    TestCase      `yaml:"APIsetting"`
+	APISetting    TestCase      `yaml:"APISetting"`
 	ClientSetting ClientSetting `yaml:"ClientSetting"`
 	TestCases     []TestCase    `yaml:"TestCases"`
 }
@@ -41,8 +41,9 @@ type ClientSetting struct {
 }
 
 type VictimService struct {
-	Name      string  `yaml:"name"`
-	ChaosList []Chaos `yaml:"ChaosList"`
+	Name        string  `yaml:"name"`
+	ChaosList   []Chaos `yaml:"ChaosList"`
+	PingTimeout int     `yaml:"pingTimeout"`
 }
 
 type Config struct {

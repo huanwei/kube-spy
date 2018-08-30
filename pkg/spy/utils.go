@@ -14,6 +14,7 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	"strconv"
 	"strings"
+	"time"
 )
 
 func GetConfig() *Config {
@@ -132,27 +133,31 @@ func PingPod(serviceName, namespace, podName, cidr string, chaos *Chaos, finishe
 	var(
 		loss string
 		delay string
+		output string
 		index int
 		data []byte
 		err error
+		timestamp time.Time
 	)
 
 	e := exec.New()
 	for {
 		// Ping ip of pod 100 times in 1 sec
 		data, err = e.Command("ping", "-i", "0.001", "-c", "100", "-q", cidr).CombinedOutput()
+		timestamp = time.Now()
 		if err != nil {
 			glog.Infof(fmt.Sprintf("Failed to ping %s:%s", cidr, err))
 			loss = "100%"
 			delay = "Timeout"
 		} else {
-			index = strings.Index(string(data), "%")
-			loss = string(data)[index-1:index]
-			index = strings.Index(string(data), "rtt")
-			delay = string(data)[index:]
+			output = string(data)
+			index = strings.Index(output, "%")
+			loss = output[index-1:index] +"%"
+			index = strings.Index(output, "rtt")
+			delay = output[index:]
 		}
 		glog.Infof(fmt.Sprintf("ping %s loss:%s %s", cidr, loss, delay))
-		AddPingResult(serviceName, namespace, chaos, podName, delay, loss)
+		AddPingResult(serviceName, namespace, chaos, podName, delay, loss, timestamp)
 		if len(stop) == 1 {
 			break
 		}

@@ -115,7 +115,7 @@ func Dotests(clientset *kubernetes.Clientset, config *Config, service *VictimSer
 		// Apply global http client settings
 		ConfigHTTPClient(client, &config.APISetting, &config.ClientSetting)
 		// Apply local http client settings
-		ConfigHTTPClient(client, &testcases.APIsetting, &testcases.ClientSetting)
+		ConfigHTTPClient(client, &testcases.APISetting, &testcases.ClientSetting)
 		// Find host
 		var host string
 		if testcases.Host == "" {

@@ -150,7 +150,7 @@ func ClearChaos(clientset *kubernetes.Clientset, config *Config) {
 			if allReady {
 				break
 			}
-			time.Sleep(time.Duration(50 * time.Millisecond))
+			time.Sleep(time.Duration(200 * time.Millisecond))
 		}
 		PodsInChaos = nil
 	}
@@ -189,7 +189,7 @@ func CloseChaos(clientset *kubernetes.Clientset) error {
 		}
 		glog.V(3).Infof("Check nodes' chaos, try no. %d", cnt)
 		cnt++
-		time.Sleep(100 * time.Millisecond)
+		time.Sleep(200 * time.Millisecond)
 	}
 
 	glog.V(3).Infof("Chaos cleared")
@@ -249,7 +249,7 @@ func ChangeReplicas(clientset *kubernetes.Clientset, service *v1.Service, replic
 						break
 					}
 					// Else wait
-					time.Sleep(100 * time.Millisecond)
+					time.Sleep(1000 * time.Millisecond)
 					deployment, err = clientset.AppsV1().Deployments(namespace).Get(dref.Name, meta_v1.GetOptions{})
 					if err != nil {
 						glog.Errorf("Fail to find Deployment %s: %s", cref.Name, err)

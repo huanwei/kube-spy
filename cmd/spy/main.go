@@ -64,7 +64,7 @@ func main() {
 
 				// Detect network environment before adding chaos
 				cidrs, podNames := spy.GetPodsInfo(pods)
-				spy.PingPods(services[i].Name, services[i].Namespace, podNames, cidrs, nil, stop)
+				go spy.PingPods(services[i].Name, services[i].Namespace, podNames, cidrs, nil, stop)
 
 				// Add chaos
 				err := spy.AddChaos(clientset, spyConfig, services[i], &chaos, pods)

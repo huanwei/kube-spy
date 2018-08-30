@@ -21,7 +21,7 @@ type TestCase struct {
 type TestCaseList struct {
 	Service       string        `yaml:"service"`
 	Host          string        `yaml:"host"`
-	APIsetting    TestCase      `yaml:"APIsetting"`
+	APISetting    TestCase      `yaml:"APISetting"`
 	ClientSetting ClientSetting `yaml:"ClientSetting"`
 	TestCases     []TestCase    `yaml:"TestCases"`
 }

@@ -1,7 +1,6 @@
 package spy
 
 import (
-	"bufio"
 	"bytes"
 	"errors"
 	"fmt"
@@ -15,6 +14,7 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	"strconv"
 	"strings"
+	"time"
 )
 
 func GetConfig() *Config {
@@ -117,48 +117,53 @@ func GetPodsInfo(pods *v1.PodList) (cidrs, podNames []string) {
 	return cidrs, podNames
 }
 
-func PingPods(serviceName, namespace string, podNames, cidrs []string, chaos *Chaos) {
+func PingPods(serviceName, namespace string, podNames, cidrs []string, chaos *Chaos, stop, complete chan bool, pingTimeout int) {
 	finished := make(chan bool, len(cidrs))
+
 	for i := range cidrs {
-		go PingPod(serviceName, namespace, podNames[i], cidrs[i], chaos, finished)
+		go PingPod(serviceName, namespace, podNames[i], cidrs[i], chaos, finished, stop, strconv.Itoa(pingTimeout))
 	}
 	for range cidrs {
 		<-finished
 	}
 	SendPingResults()
+	complete <- true
 }
 
-func PingPod(serviceName, namespace, podName, cidr string, chaos *Chaos, finished chan bool) {
-	var loss, delay string
+func PingPod(serviceName, namespace, podName, cidr string, chaos *Chaos, finished chan bool, stop chan bool, pingTimeout string) {
+	var (
+		loss      string
+		delay     string
+		output    string
+		index     int
+		data      []byte
+		err       error
+		timestamp time.Time
+	)
 
 	e := exec.New()
-	// Ping ip of pod 100 times in 1 sec
-	data, err := e.Command("ping", "-i", "0.001", "-c", "100", "-q", cidr).CombinedOutput()
-	if err != nil {
-		glog.Infof(fmt.Sprintf("Failed to ping %s:%s", cidr, err))
-		loss = "100%"
-		delay = "Timeout"
-	} else {
-		// Scan the ping statistics
-		scanner := bufio.NewScanner(bytes.NewBuffer(data))
-		for scanner.Scan() {
-			line := strings.TrimSpace(scanner.Text())
-			if len(line) == 0 {
-				continue
-			}
-			// Get loss line
-			if strings.Contains(line, "transmitted") {
-				parts := strings.Split(line, " ")
-				loss = strings.Split(parts[5], "!")[0] + "%"
-			}
-			// Get delay statistics line
-			if strings.Contains(line, "rtt") {
-				delay = line
-			}
+	for {
+		// Ping ip of pod 100 times in 1 sec
+		timestamp = time.Now()
+		data, err = e.Command("ping", "-i", "0.001", "-c", "100", "-W", pingTimeout, "-q", cidr).CombinedOutput()
+		timestamp = time.Now().Add(timestamp.Sub(time.Now()) / 2)
+		if err != nil {
+			glog.Infof(fmt.Sprintf("Failed to ping %s:%s", cidr, err))
+			loss = "100%"
+			delay = "Timeout"
+		} else {
+			output = string(data)
+			index = strings.Index(output, "%")
+			loss = output[index-1:index] + "%"
+			index = strings.Index(output, "rtt")
+			delay = output[index:]
+		}
+		glog.Infof(fmt.Sprintf("%v ping %s loss:%s %s", timestamp.Format("15:04:05.000000"), cidr, loss+"%", delay))
+		AddPingResult(serviceName, namespace, chaos, podName, delay, loss, timestamp)
+		if len(stop) == 1 {
+			break
 		}
 	}
-	glog.Infof(fmt.Sprintf("ping %s loss:%s %s", cidr, loss, delay))
-	AddPingResult(serviceName, namespace, chaos, podName, delay, loss)
 	finished <- true
 }
 

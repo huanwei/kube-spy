@@ -239,7 +239,7 @@ func ChangeReplicas(clientset *kubernetes.Clientset, service *v1.Service, replic
 			}
 			glog.V(3).Infof("Deployment %s scaled to %d, waiting for them to be ready...", deployment.Name, *deployment.Spec.Replicas)
 
-			if int(replica) >= previousReplica{
+			if int(replica) >= previousReplica {
 				// Loop for checking availability
 				for {
 					glog.V(3).Infof("Replicas total: %d available: %d ready: %d unavailable: %d", deployment.Status.Replicas, deployment.Status.AvailableReplicas, deployment.Status.ReadyReplicas, deployment.Status.UnavailableReplicas)

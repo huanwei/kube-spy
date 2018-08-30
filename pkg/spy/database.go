@@ -130,7 +130,7 @@ func SendResponses() {
 	}
 }
 
-func AddPingResult(serviceName, namespace string, chaos *Chaos, podName, delay, loss string) {
+func AddPingResult(serviceName, namespace string, chaos *Chaos, podName, delay, loss string, timestamp time.Time) {
 	// Create map
 	tags := make(map[string]string)
 	fields := make(map[string]interface{})
@@ -160,7 +160,7 @@ func AddPingResult(serviceName, namespace string, chaos *Chaos, podName, delay, 
 		"ping",
 		tags,
 		fields,
-		time.Now(),
+		timestamp,
 	)
 	if err != nil {
 		glog.Warningf("Fail to create point: %s", err)

@@ -1,0 +1,26 @@
+Namespace: "default"
+
+VictimServices:
+- name: "http-test-service1"
+  ChaosList:
+  - replica:
+    ingress: ",delay,50ms"
+    egress: ",delay,50ms"
+- name: "http-test-service2"
+  ChaosList:
+- name: "http-test-service3"
+  ChaosList:
+
+APISetting:
+
+TestCaseLists:
+- service: "http-test-service1"
+  TestCases:
+  - method: "GET"
+    url: "/"
+
+ClientSetting:
+  retryCount: 0
+  retryWait: 1000
+  retryMaxWait: 1000
+  timeout: 500

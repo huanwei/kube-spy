@@ -143,8 +143,9 @@ func PingPod(serviceName, namespace, podName, cidr string, chaos *Chaos, finishe
 	e := exec.New()
 	for {
 		// Ping ip of pod 100 times in 1 sec
-		data, err = e.Command("ping", "-i", "0.001", "-c", "100", "-q", cidr).CombinedOutput()
 		timestamp = time.Now()
+		data, err = e.Command("ping", "-i", "0.001", "-c", "100", "-q", cidr).CombinedOutput()
+		timestamp = time.Now().Add(timestamp.Sub(time.Now()) / 2)
 		if err != nil {
 			glog.Infof(fmt.Sprintf("Failed to ping %s:%s", cidr, err))
 			loss = "100%"
@@ -152,7 +153,7 @@ func PingPod(serviceName, namespace, podName, cidr string, chaos *Chaos, finishe
 		} else {
 			output = string(data)
 			index = strings.Index(output, "%")
-			loss = output[index-1:index] +"%"
+			loss = output[index-1:index] +"%%"
 			index = strings.Index(output, "rtt")
 			delay = output[index:]
 		}

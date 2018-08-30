@@ -154,11 +154,11 @@ func PingPod(serviceName, namespace, podName, cidr string, chaos *Chaos, finishe
 		} else {
 			output = string(data)
 			index = strings.Index(output, "%")
-			loss = output[index-1:index] + "%%"
+			loss = output[index-1:index] + "%"
 			index = strings.Index(output, "rtt")
 			delay = output[index:]
 		}
-		glog.Infof(fmt.Sprintf("ping %s loss:%s %s", cidr, loss, delay))
+		glog.Infof(fmt.Sprintf("%v ping %s loss:%s %s",timestamp, cidr, loss+"%", delay))
 		AddPingResult(serviceName, namespace, chaos, podName, delay, loss, timestamp)
 		if len(stop) == 1 {
 			break

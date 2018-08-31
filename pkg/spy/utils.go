@@ -132,8 +132,8 @@ func PingPods(serviceName, namespace string, podNames, cidrs []string, chaos *Ch
 
 func PingPod(serviceName, namespace, podName, cidr string, chaos *Chaos, finished chan bool, stop chan bool, pingTimeout string) {
 	var (
-		loss, output        string
-		index               int
+		output              string
+		loss, index         int
 		data                []byte
 		err                 error
 		timestamp           time.Time
@@ -148,8 +148,9 @@ func PingPod(serviceName, namespace, podName, cidr string, chaos *Chaos, finishe
 		timestamp = time.Now().Add(timestamp.Sub(time.Now()) / 2)
 		if err != nil {
 			timeout, _ := strconv.ParseFloat(pingTimeout, 64)
+			timeout = timeout * 1000
 			glog.Infof(fmt.Sprintf("Failed to ping %s:%s", cidr, err))
-			loss = "100%"
+			loss = 100
 			min = timeout
 			avg = timeout
 			max = timeout
@@ -157,7 +158,7 @@ func PingPod(serviceName, namespace, podName, cidr string, chaos *Chaos, finishe
 		} else {
 			output = string(data)
 			index = strings.Index(output, "%")
-			loss = strings.TrimSpace(output[index-2:index]) + "%"
+			loss, _ = strconv.Atoi(strings.TrimSpace(output[index-2 : index]))
 			index = strings.Index(output, "=")
 			rtt := strings.Split(strings.Split(output[index+2:], " ")[0], "/")
 			min, _ = strconv.ParseFloat(rtt[0], 64)
@@ -165,8 +166,8 @@ func PingPod(serviceName, namespace, podName, cidr string, chaos *Chaos, finishe
 			max, _ = strconv.ParseFloat(rtt[2], 64)
 			mdev, _ = strconv.ParseFloat(rtt[3], 64)
 		}
-		glog.Infof(fmt.Sprintf("%v ping %s loss:%s rtt min/avg/max/mdev = %f/%f/%f/%f ms",
-			timestamp.Format("15:04:05.000000"), cidr, loss+"%", min, avg, max, mdev))
+		glog.Infof(fmt.Sprintf("%v ping %s loss:%d%% rtt min/avg/max/mdev = %f/%f/%f/%f ms",
+			timestamp.Format("15:04:05.000000"), cidr, loss, min, avg, max, mdev))
 		AddPingResult(serviceName, namespace, chaos, podName, loss, min, avg, max, mdev, timestamp)
 		if len(stop) == 1 {
 			break

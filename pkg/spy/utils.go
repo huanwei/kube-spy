@@ -157,7 +157,7 @@ func PingPod(serviceName, namespace, podName, cidr string, chaos *Chaos, finishe
 		} else {
 			output = string(data)
 			index = strings.Index(output, "%")
-			loss = output[index-1:index] + "%"
+			loss = strings.TrimSpace(output[index-2:index]) + "%"
 			index = strings.Index(output, "=")
 			rtt := strings.Split(strings.Split(output[index+2:], " ")[0], "/")
 			min, _ = strconv.ParseFloat(rtt[0], 64)

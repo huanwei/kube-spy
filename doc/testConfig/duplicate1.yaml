@@ -3,7 +3,7 @@ Namespace: "default"
 VictimServices:
 - name: "http-test-service1"
   ChaosList:
-  - ingress: "1kbps,,"
+  - ingress: "10kbps,duplicate,10%"
     egress:
 - name: "http-test-service2"
   ChaosList:

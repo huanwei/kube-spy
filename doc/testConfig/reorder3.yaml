@@ -3,8 +3,8 @@ Namespace: "default"
 VictimServices:
 - name: "http-test-service1"
   ChaosList:
-  - ingress: "1kbps,,"
-    egress: "1kbps,,"
+  - ingress: ",delay,50ms,reorder,80%"
+    egress: ",delay,50ms,reorder,70%"
 - name: "http-test-service2"
   ChaosList:
 - name: "http-test-service3"

@@ -118,37 +118,108 @@
 
 ##### TestCase2：
 
-- 输入：ingress: "1kbps,,"
+- 输入：ingress: "10kbps,,"
 - 预期输出：服务入口流量被限速，导致服务接受请求延时，不影响发送请求
-- 配置文件：[chaos2.yaml](./testConfig/chaos2.yaml)
+- 配置文件：[rate1.yaml](./testConfig/rate1.yaml)
 
 ##### TestCase3：
 
-- 输入：egress: "1kbps,,"
+- 输入：egress: "10kbps,,"
 - 预期输出：服务出口流量被限速，导致服务发送请求延时，不影响接受请求
-- 配置文件：[chaos3.yaml](./testConfig/chaos3.yaml)
+- 配置文件：[rate2.yaml](./testConfig/rate2.yaml)
 
 ##### TestCase4：
 
-- 输入：ingress: "1kbps,,"  egress: "1kbps,,"
+- 输入：ingress: "10kbps,,"  egress: "10kbps,,"
 - 预期输出：服务出入口流量均被限速，导致服务发送、接受请求延时
-- 配置文件：[chaos4.yaml](./testConfig/chaos4.yaml)
+- 配置文件：[rate3.yaml](./testConfig/rate3.yaml)
 
 ##### TestCase5：
 
 - 输入：ingress: ",delay,50ms" 
 - 预期输出：服务入口流量被延时50ms
-- 配置文件：[chaos5.yaml](./testConfig/chaos5.yaml)
+- 配置文件：[delay1.yaml](./testConfig/delay1.yaml)
 
 ##### TestCase6：
 
 - 输入：egress: ",delay,50ms" 
 - 预期输出：服务出口流量被延时50ms
-- 配置文件：[chaos6.yaml](./testConfig/chaos6.yaml)
+- 配置文件：[delay2.yaml](./testConfig/delay2.yaml)
 
 ##### TestCase7：
 
 - 输入：ingress: ",delay,50ms"  egress: ",delay,50ms" 
 - 预期输出：服务入口和出口流量均被延时50ms
-- 配置文件：[chaos7.yaml](./testConfig/chaos7.yaml)
+- 配置文件：[delay3.yaml](./testConfig/delay3.yaml)
 
+##### TestCase8：
+
+- 输入：ingress: ",loss,20%" 
+- 预期输出：服务入口流量ip包随机丢弃20%
+- 配置文件：[loss1.yaml](./testConfig/loss1.yaml)
+
+##### TestCase9：
+
+- 输入：egress: ",loss,30%" 
+- 预期输出：服务出口流量ip包随机丢弃30%
+- 配置文件：[loss2.yaml](./testConfig/loss2.yaml)
+
+##### TestCase10：
+
+- 输入：ingress: ",loss,20%"  egress: ",loss,30%" 
+- 预期输出：服务入口流量ip包随机丢弃20%，出口流量ip包随机丢弃30%
+- 配置文件：[loss3.yaml](./testConfig/loss3.yaml)
+
+##### TestCase11：
+
+- 输入：ingress: "10kbps,duplicate,10%" (与TestCase2进行对比)
+- 预期输出：入口流量ip包10%重复，挤占带宽导致延迟进一步增大
+- 配置文件：[duplicate1.yaml](./testConfig/duplicate1.yaml)
+
+##### TestCase12：
+
+- 输入：egress: "10kbps,duplicate,15%" (与TestCase3进行对比)
+- 预期输出：出口流量ip包15%重复，挤占带宽导致延迟进一步增大
+- 配置文件：[duplicate2.yaml](./testConfig/duplicate2.yaml)
+
+##### TestCase13：
+
+- 输入：ingress: "10kbps,duplicate,10%" egress: "10kbps,duplicate,15%" (与TestCase4进行对比)
+- 预期输出：入口、出口流量ip包重复，挤占带宽导致延迟进一步增大
+- 配置文件：[duplicate3.yaml](./testConfig/duplicate3.yaml)
+
+##### TestCase14：
+
+- 输入：ingress: ",delay,50ms,reorder,80%" (与TestCase5进行对比)
+- 预期输出：入口流量ip包80%直接通过，20%延时50ms，最终花费时间小于TestCase5，大于TestCase1
+- 配置文件：[reorder1.yaml](./testConfig/reorder1.yaml)
+
+##### TestCase15：
+
+- 输入：egress: ",delay,50ms,reorder,70%" (与TestCase6进行对比)
+- 预期输出：出口流量ip包70%直接通过，30%延时50ms，最终花费时间小于TestCase6，大于TestCase1
+- 配置文件：[reorder2.yaml](./testConfig/reorder2.yaml)
+
+##### TestCase16：
+
+- 输入：ingress: ",delay,50ms,reorder,80%"  egress: ",delay,50ms,reorder,70%" (与TestCase7进行对比)
+- 预期输出：入口流量ip包80%直接通过，20%延时50ms，出口流量ip包70%直接通过，30%延时50ms，最终花费时间小于TestCase7，大于TestCase1
+- 配置文件：[reorder3.yaml](./testConfig/reorder3.yaml)
+
+##### TestCase17：
+
+- 输入：ingress: ",corrupt,50%" (与TestCase1进行对比)
+- 预期输出：入口流量ip包50%损坏，最终耗时波动较大
+- 配置文件：[corrupt1.yaml](./testConfig/corrupt1.yaml)
+
+##### TestCase18：
+
+- 输入：egress: ",corrupt,40%" (与TestCase1进行对比)
+- 预期输出：出口流量ip包40%损坏，最终耗时波动较大
+- 配置文件：[corrupt2.yaml](./testConfig/corrupt2.yaml)
+
+##### TestCase19：
+
+- 输入：ingress: ",corrupt,50%"  egress: ",corrupt,40%" (与TestCase1进行对比)
+- 预期输出：入口流量ip包50%损坏，出口流量ip包40%损坏，最终耗时波动较大
+- 配置文件：[corrupt3.yaml](./testConfig/corrupt3.yaml)

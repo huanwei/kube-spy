@@ -25,6 +25,10 @@ spec:
           value: kubespy
         - name: INFLUXDB_WRITE_USER_PASSWORD
           value: kubespy
+        - name: INFLUXDB_READ_USER
+          value: grafana
+        - name: INFLUXDB_READ_USER_PASSWORD
+          value: grafana
         volumeMounts:
         - name: host-time
           mountPath: /etc/localtime

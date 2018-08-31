@@ -59,7 +59,7 @@ func ConnectDB(clientset *kubernetes.Clientset, config *Config) {
 	}
 }
 
-func AddResponse(service *VictimService, chaos *Chaos, test *TestCase, response *resty.Response, err error) {
+func AddResponse(service *VictimService, chaos *Chaos, test *TestCase, response *resty.Response, err error, idempotent bool) {
 	// Create map
 	tags := make(map[string]string)
 	fields := make(map[string]interface{})
@@ -95,6 +95,7 @@ func AddResponse(service *VictimService, chaos *Chaos, test *TestCase, response 
 		fields["body"] = base64.StdEncoding.EncodeToString([]byte(response.Body()))
 	}
 
+	fields["idempotent"] = idempotent
 	fields["duration"] = response.Time()
 
 	// Create point

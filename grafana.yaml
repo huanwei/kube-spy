@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana-spy
+  namespace: default
+  labels:
+    name: grafana-spy
+spec:
+  selector:
+    matchLabels:
+      name: grafana-spy
+  template:
+    metadata:
+      labels:
+        name: grafana-spy
+    spec:
+      containers:
+      - name: grafana-spy
+        image: grafana/grafana:5.2.0
+        imagePullPolicy: IfNotPresent
+        env:
+        volumeMounts:
+        - name: host-time
+          mountPath: /etc/localtime
+      volumes:
+      - name: host-time
+        hostPath:
+          path: /etc/localtime

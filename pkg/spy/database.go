@@ -130,7 +130,7 @@ func SendResponses() {
 	}
 }
 
-func AddPingResult(serviceName, namespace string, chaos *Chaos, podName, delay, loss string, timestamp time.Time) {
+func AddPingResult(serviceName, namespace string, chaos *Chaos, podName, loss string, min, avg, max, mdev float64, timestamp time.Time) {
 	// Create map
 	tags := make(map[string]string)
 	fields := make(map[string]interface{})
@@ -138,7 +138,10 @@ func AddPingResult(serviceName, namespace string, chaos *Chaos, podName, delay, 
 	tags["serviceName"] = serviceName
 	tags["namespace"] = namespace
 	tags["podName"] = podName
-	fields["delay"] = delay
+	fields["rtt-min"] = min
+	fields["rtt-avg"] = avg
+	fields["rtt-max"] = max
+	fields["rtt-mdev"] = mdev
 	fields["loss"] = loss
 
 	if chaos == nil {

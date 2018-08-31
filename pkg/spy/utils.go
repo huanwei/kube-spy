@@ -132,13 +132,12 @@ func PingPods(serviceName, namespace string, podNames, cidrs []string, chaos *Ch
 
 func PingPod(serviceName, namespace, podName, cidr string, chaos *Chaos, finished chan bool, stop chan bool, pingTimeout string) {
 	var (
-		loss      string
-		delay     string
-		output    string
-		index     int
-		data      []byte
-		err       error
-		timestamp time.Time
+		loss, output        string
+		index               int
+		data                []byte
+		err                 error
+		timestamp           time.Time
+		min, avg, max, mdev float64
 	)
 
 	e := exec.New()
@@ -148,18 +147,27 @@ func PingPod(serviceName, namespace, podName, cidr string, chaos *Chaos, finishe
 		data, err = e.Command("ping", "-i", "0.001", "-c", "100", "-W", pingTimeout, "-q", cidr).CombinedOutput()
 		timestamp = time.Now().Add(timestamp.Sub(time.Now()) / 2)
 		if err != nil {
+			timeout, _ := strconv.ParseFloat(pingTimeout, 64)
 			glog.Infof(fmt.Sprintf("Failed to ping %s:%s", cidr, err))
 			loss = "100%"
-			delay = "Timeout"
+			min = timeout
+			avg = timeout
+			max = timeout
+			mdev = 0
 		} else {
 			output = string(data)
 			index = strings.Index(output, "%")
 			loss = output[index-1:index] + "%"
-			index = strings.Index(output, "rtt")
-			delay = output[index:]
+			index = strings.Index(output, "=")
+			rtt := strings.Split(strings.Split(output[index+2:], " ")[0], "/")
+			min, _ = strconv.ParseFloat(rtt[0], 64)
+			avg, _ = strconv.ParseFloat(rtt[1], 64)
+			max, _ = strconv.ParseFloat(rtt[2], 64)
+			mdev, _ = strconv.ParseFloat(rtt[3], 64)
 		}
-		glog.Infof(fmt.Sprintf("%v ping %s loss:%s %s", timestamp.Format("15:04:05.000000"), cidr, loss+"%", delay))
-		AddPingResult(serviceName, namespace, chaos, podName, delay, loss, timestamp)
+		glog.Infof(fmt.Sprintf("%v ping %s loss:%s rtt min/avg/max/mdev = %f/%f/%f/%f ms",
+			timestamp.Format("15:04:05.000000"), cidr, loss+"%", min, avg, max, mdev))
+		AddPingResult(serviceName, namespace, chaos, podName, loss, min, avg, max, mdev, timestamp)
 		if len(stop) == 1 {
 			break
 		}

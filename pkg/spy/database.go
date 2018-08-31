@@ -96,7 +96,7 @@ func AddResponse(service *VictimService, chaos *Chaos, test *TestCase, response 
 	}
 
 	fields["idempotent"] = idempotent
-	fields["duration"] = response.Time()
+	fields["duration"] = response.Time().Seconds()*1000
 
 	// Create point
 	point, err := client_v2.NewPoint(

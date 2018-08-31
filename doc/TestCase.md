@@ -34,6 +34,12 @@
 - 预期输出：相应报错信息
 - 配置文件：[svc_name2.yaml](./testConfig/svc_name2.yaml)
 
+##### TestCase3：
+
+- 输入：两次输入相同的服务名
+- 预期输出：对该服务分别进行两次故障注入
+- 配置文件：[svc_name3.yaml](./testConfig/svc_name3.yaml)
+
 
 
 #### VictimServices-ChaosList：
@@ -99,4 +105,50 @@
 - 输入：50%（replica为3）
 - 预期输出：副本数被调整为3后，对第一个（取下整）pod添加了chaos进行测试
 - 配置文件：[range3.yaml](./testConfig/range3.yaml)
+
+
+
+#### VictimServices-ChaosList-ingress/egress：
+
+##### TestCase1：
+
+- 输入：空
+- 预期输出：所有副本都没有被添加chaos
+- 配置文件：[chaos1.yaml](./testConfig/chaos1.yaml)
+
+##### TestCase2：
+
+- 输入：ingress: "1kbps,,"
+- 预期输出：服务入口流量被限速，导致服务接受请求延时，不影响发送请求
+- 配置文件：[chaos2.yaml](./testConfig/chaos2.yaml)
+
+##### TestCase3：
+
+- 输入：egress: "1kbps,,"
+- 预期输出：服务出口流量被限速，导致服务发送请求延时，不影响接受请求
+- 配置文件：[chaos3.yaml](./testConfig/chaos3.yaml)
+
+##### TestCase4：
+
+- 输入：ingress: "1kbps,,"  egress: "1kbps,,"
+- 预期输出：服务出入口流量均被限速，导致服务发送、接受请求延时
+- 配置文件：[chaos4.yaml](./testConfig/chaos4.yaml)
+
+##### TestCase5：
+
+- 输入：ingress: ",delay,50ms" 
+- 预期输出：服务入口流量被延时50ms
+- 配置文件：[chaos5.yaml](./testConfig/chaos5.yaml)
+
+##### TestCase6：
+
+- 输入：egress: ",delay,50ms" 
+- 预期输出：服务出口流量被延时50ms
+- 配置文件：[chaos6.yaml](./testConfig/chaos6.yaml)
+
+##### TestCase7：
+
+- 输入：ingress: ",delay,50ms"  egress: ",delay,50ms" 
+- 预期输出：服务入口和出口流量均被延时50ms
+- 配置文件：[chaos7.yaml](./testConfig/chaos7.yaml)
 

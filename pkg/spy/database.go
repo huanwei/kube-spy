@@ -67,11 +67,15 @@ func AddResponse(service *VictimService, chaos *Chaos, test *TestCase, response 
 	// Set tags and fields
 	if service == nil {
 		tags["victim"] = "none"
+		fields["victim"] = "none"
 	} else {
 		tags["victim"] = service.Name
+		fields["victim"] = service.Name
 	}
 	tags["url"] = test.URL
+	fields["url"] = test.URL
 	tags["method"] = test.Method
+	fields["method"] = test.Method
 
 	if chaos == nil {
 		fields["chaos-ingress"] = "none"

@@ -119,12 +119,7 @@ func Dotests(clientset *kubernetes.Clientset, config *Config, service *VictimSer
 		// Find host
 		var host string
 		if testcases.Host == "" {
-			service, err := GetService(clientset, config, testcases.Service)
-			if err != nil {
-				glog.Errorf("Can't find service \"%s\", continue: %s", testcases.Service, err)
-				continue
-			}
-			host = service.Spec.ClusterIP
+			host = testcases.Service+"."+config.Namespace
 		} else {
 			host = testcases.Host
 		}

@@ -36,3 +36,18 @@ spec:
       - name: host-time
         hostPath:
           path: /etc/localtime
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: influxdb-spy
+  namespace: default
+  labels:
+    name: influxdb-spy
+spec:
+  selector:
+    name: influxdb-spy
+  ports:
+  - port: 8086

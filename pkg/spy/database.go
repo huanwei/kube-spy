@@ -76,18 +76,20 @@ func AddResponse(service *VictimService, chaos *Chaos, test *TestCase, response 
 	if chaos == nil {
 		fields["chaos-ingress"] = "none"
 		fields["chaos-egress"] = "none"
-		fields["chaos-replica"] = "none"
+		fields["chaos-replica"] = 0
 	} else {
 		fields["chaos-ingress"] = chaos.Ingress
 		fields["chaos-egress"] = chaos.Egress
-		if chaos.Replica == 0 {
-			fields["chaos-replica"] = "none"
-		} else {
-			fields["chaos-replica"] = strconv.Itoa(chaos.Replica)
-		}
+		fields["chaos-replica"] = chaos.Replica
+
 	}
 
-	fields["status"] = response.Status()
+	if response.Status()==""{
+		fields["status"] = "TIMEOUT"
+	}else {
+		fields["status"] = response.Status()
+	}
+
 
 	if err != nil {
 		fields["body"] = base64.StdEncoding.EncodeToString([]byte(err.Error()))

@@ -166,7 +166,7 @@ func PingPod(serviceName, namespace, podName, cidr string, chaos *Chaos, finishe
 			max, _ = strconv.ParseFloat(rtt[2], 64)
 			mdev, _ = strconv.ParseFloat(rtt[3], 64)
 		}
-		glog.Infof(fmt.Sprintf("%v ping %s loss:%d%% rtt min/avg/max/mdev = %f/%f/%f/%f ms",
+		glog.Infof(fmt.Sprintf("%v ping %s loss:%d rtt min/avg/max/mdev = %f/%f/%f/%f ms",
 			timestamp.Format("15:04:05.000000"), cidr, loss, min, avg, max, mdev))
 		AddPingResult(serviceName, namespace, chaos, podName, loss, min, avg, max, mdev, timestamp)
 		if len(stop) == 1 {

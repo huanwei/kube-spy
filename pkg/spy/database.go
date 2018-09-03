@@ -59,7 +59,7 @@ func ConnectDB(clientset *kubernetes.Clientset, config *Config) {
 	}
 }
 
-func AddResponse(service *VictimService, chaos *Chaos, test *TestCase, response *resty.Response, err error) {
+func AddResponse(service *VictimService, chaos *Chaos, test *TestCase, response *resty.Response, err error, idempotent bool) {
 	// Create map
 	tags := make(map[string]string)
 	fields := make(map[string]interface{})
@@ -67,27 +67,33 @@ func AddResponse(service *VictimService, chaos *Chaos, test *TestCase, response 
 	// Set tags and fields
 	if service == nil {
 		tags["victim"] = "none"
+		fields["victim"] = "none"
 	} else {
 		tags["victim"] = service.Name
+		fields["victim"] = service.Name
 	}
 	tags["url"] = test.URL
+	fields["url"] = test.URL
 	tags["method"] = test.Method
+	fields["method"] = test.Method
 
 	if chaos == nil {
 		fields["chaos-ingress"] = "none"
 		fields["chaos-egress"] = "none"
-		fields["chaos-replica"] = "none"
+		fields["chaos-replica"] = 0
 	} else {
 		fields["chaos-ingress"] = chaos.Ingress
 		fields["chaos-egress"] = chaos.Egress
-		if chaos.Replica == 0 {
-			fields["chaos-replica"] = "none"
-		} else {
-			fields["chaos-replica"] = strconv.Itoa(chaos.Replica)
-		}
+		fields["chaos-replica"] = chaos.Replica
+
 	}
 
-	fields["status"] = response.Status()
+	if response.Status()==""{
+		fields["status"] = "TIMEOUT"
+	}else {
+		fields["status"] = response.Status()
+	}
+
 
 	if err != nil {
 		fields["body"] = base64.StdEncoding.EncodeToString([]byte(err.Error()))
@@ -95,7 +101,8 @@ func AddResponse(service *VictimService, chaos *Chaos, test *TestCase, response 
 		fields["body"] = base64.StdEncoding.EncodeToString([]byte(response.Body()))
 	}
 
-	fields["duration"] = response.Time()
+	fields["idempotent"] = idempotent
+	fields["duration"] = response.Time().Seconds()*1000
 
 	// Create point
 	point, err := client_v2.NewPoint(

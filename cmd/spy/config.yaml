@@ -5,11 +5,23 @@ Namespace: "default"
 VictimServices:
 - name: "http-test-service1"
   ChaosList:
-  - replica: 1
-    ingress: ",delay,50ms"
-    egress: ",delay,50ms"
+#  - replica: 3
+#    ingress: ",delay,50ms"
+#    egress: ",delay,50ms"
+#  - ingress: ",delay,110ms"
+#    egress: ",delay,110ms"
+#  - ingress: ",delay,200ms"
+#    egress: ",delay,200ms"
+#  - ingress: ",delay,300ms"
+#    egress: ",delay,300ms"
+#  - ingress: ",delay,500ms"
+#    egress: ",delay,500ms"
+#  - ingress: ",delay,800ms"
+#    egress: ",delay,800ms"
+#    replica: 4
+#    range: 2
 - name: "http-test-service2"
-#  ChaosList:
+  ChaosList:
 #  - ingress: ",delay,50ms"
 #    egress: ",delay,50ms"
 #    replica: 1
@@ -31,57 +43,57 @@ APISetting:
 # These test case will be tested in every loop
 TestCaseLists:
 - service: "http-test-service1"
-#  host: "httpbin.org"
+  host: "httpbin.org"
   TestCases:
-  - method: "GET"
-    url: "/"
-## Set request json body and headers
 #  - method: "GET"
-#    url: "/headers"
-#    headers:
-#      Content-Type: "application/json"
-#    body: "{ languages: [ 'Ruby', 'Perl', 'Python', 'c' ] }"
+#    url: "/"
+# Set request json body and headers
+  - method: "GET"
+    url: "/headers"
+    headers:
+      Content-Type: "application/json"
+    body: "{ languages: [ 'Ruby', 'Perl', 'Python', 'c' ] }"
 
-## Set form and files
-#  - method: "POST"
-#    url: "/post"
-#    form:
-#      first_name: "Jeevanandam"
-#      last_name:  "M"
-#    files:
-#      1: "/tmp/spy.INFO"
-#      2: "/tmp/spy.INFO"
+# Set form and files
+  - method: "POST"
+    url: "/post"
+    form:
+      first_name: "Jeevanandam"
+      last_name:  "M"
+    files:
+      1: "/tmp/spy.INFO"
+      2: "/tmp/spy.INFO"
 
 
-## Set query params and bearer auth
-#  - method: "Get"
-#    url: "/get"
-#    params:
-#      data: "a"
-#    headers:
-#    authToken: "C6A79608-782F-4ED0-A11D-BD82FAD829CD"
-#
-## Set multi value form and params
-#  - method: "Post"
-#    url: "/post"
-#    multiValueForm:
-#      data:
-#        - "a"
-#        - "b"
-#      text:
-#        - "c"
-#    multiValueParams:
-#      data:
-#        - "a"
-#        - "b"
-#      text:
-#        - "c"
+# Set query params and bearer auth
+  - method: "Get"
+    url: "/get"
+    params:
+      data: "a"
+    headers:
+    authToken: "C6A79608-782F-4ED0-A11D-BD82FAD829CD"
 
-## Set path params
-#  - method: "Get"
-#    url: "/base64/{value}"
-#    pathParams:
-#      value: "a3ViZS1zcHk="
+# Set multi value form and params
+  - method: "Post"
+    url: "/post"
+    multiValueForm:
+      data:
+        - "a"
+        - "b"
+      text:
+        - "c"
+    multiValueParams:
+      data:
+        - "a"
+        - "b"
+      text:
+        - "c"
+
+# Set path params
+  - method: "Get"
+    url: "/base64/{value}"
+    pathParams:
+      value: "a3ViZS1zcHk="
 
 ## Set basic auth
 #  - method: "get"
@@ -97,4 +109,4 @@ ClientSetting:
 # unit: milliseconds
   retryWait: 1000
   retryMaxWait: 1000
-  timeout: 500
+  timeout: 2000

@@ -30,6 +30,13 @@ func GetConfig() *Config {
 	// Decode config file
 	spyConfig := &Config{}
 	decoder.Decode(spyConfig)
+
+	for index1,testCaseList:=range spyConfig.TestCaseLists{
+		for index2,testCase:=range testCaseList.TestCases{
+			spyConfig.TestCaseLists[index1].TestCases[index2].Method=string(bytes.ToUpper([]byte(testCase.Method)))
+		}
+	}
+
 	glog.Infof("decoded:\n%v", spyConfig)
 	glog.Flush()
 

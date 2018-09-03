@@ -1,0 +1,20 @@
+Namespace: "default"
+
+VictimServices:
+- name: "http-test-service?"
+- name: "http-test-serv"
+- name: "http-teice3"
+
+APISetting:
+
+TestCaseLists:
+- service: "http-test-service1"
+  TestCases:
+  - method: "GET"
+    url: "/"
+
+ClientSetting:
+  retryCount: 0
+  retryWait: 1000
+  retryMaxWait: 1000
+  timeout: 500

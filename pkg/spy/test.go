@@ -21,10 +21,10 @@ func ConfigHTTPClient(client *resty.Client, APIsetting *TestCase, Clientsetting 
 
 	if Clientsetting.RetryCount > 0 {
 		client.SetRetryCount(Clientsetting.RetryCount)
-		if Clientsetting.RetryWait>0{
+		if Clientsetting.RetryWait > 0 {
 			client.SetRetryWaitTime(time.Duration(Clientsetting.RetryWait) * time.Millisecond)
 		}
-		if Clientsetting.RetryMaxWait>0{
+		if Clientsetting.RetryMaxWait > 0 {
 			client.SetRetryMaxWaitTime(time.Duration(Clientsetting.RetryMaxWait) * time.Millisecond)
 		}
 	}
@@ -119,19 +119,21 @@ func Dotests(clientset *kubernetes.Clientset, config *Config, service *VictimSer
 		// Find host
 		var host string
 		if testcases.Host == "" {
-			service, err := GetService(clientset, config, testcases.Service)
-			if err != nil {
-				glog.Errorf("Can't find service \"%s\", continue: %s", testcases.Service, err)
-				continue
-			}
-			host = service.Spec.ClusterIP
+			host = testcases.Service+"."+config.Namespace
 		} else {
 			host = testcases.Host
 		}
 		// Do tests
 		for _, test := range testcases.TestCases {
-			err, response := DoTest(client, test, host)
-			AddResponse(service, chaos, &test, response, err)
+			err, response1 := DoTest(client, test, host)
+			err, response2 := DoTest(client, test, host)
+			err, response3 := DoTest(client, test, host)
+			if string(response2.Body()) != string(response3.Body()) {
+				AddResponse(service, chaos, &test, response1, err, false)
+			} else {
+				AddResponse(service, chaos, &test, response1, err, true)
+			}
+
 		}
 		// Send response to db
 		SendResponses()

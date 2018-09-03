@@ -6,4 +6,4 @@ list=$(kubectl get pod -o wide|grep influxdb-spy)
 array=(${list// / })
 # Query
 curl -G "http://${array[5]}:8086/query?pretty=true" --data-urlencode "db=spy" --data-urlencode "q=SELECT * FROM response WHERE time > now() - $1 LIMIT 4"
-curl -G "http://${array[5]}:8086/query?pretty=true" --data-urlencode "db=spy" --data-urlencode "q=SELECT * FROM ping WHERE time > now() - $1 "
+curl -G "http://${array[5]}:8086/query?pretty=true" --data-urlencode "db=spy" --data-urlencode "q=SELECT * FROM ping WHERE time > now() - $1 LIMIT 4"

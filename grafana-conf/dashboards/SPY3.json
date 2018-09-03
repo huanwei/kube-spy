@@ -51,8 +51,7 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
-  "id": null,
-  "iteration": 1535963626312,
+  "iteration": 1535967421472,
   "links": [],
   "panels": [
     {
@@ -589,8 +588,8 @@
           ],
           "dateFormat": "YYYY-MM-DD HH:mm:ss",
           "decimals": 2,
-          "link": true,
-          "linkTargetBlank": true,
+          "link": false,
+          "linkTargetBlank": false,
           "linkTooltip": "",
           "linkUrl": "",
           "mappingType": 1,
@@ -711,6 +710,8 @@
           ]
         }
       ],
+      "timeFrom": "$range",
+      "timeShift": "$shift",
       "title": "response list",
       "transform": "timeseries_to_columns",
       "transparent": true,
@@ -724,7 +725,10 @@
     "list": [
       {
         "allValue": null,
-        "current": {},
+        "current": {
+          "text": "http-test-service1",
+          "value": "http-test-service1"
+        },
         "datasource": "spy",
         "hide": 0,
         "includeAll": false,
@@ -744,7 +748,10 @@
       },
       {
         "allValue": null,
-        "current": {},
+        "current": {
+          "text": "/base64/{value}",
+          "value": "/base64/{value}"
+        },
         "datasource": "spy",
         "hide": 0,
         "includeAll": false,
@@ -764,7 +771,10 @@
       },
       {
         "allValue": null,
-        "current": {},
+        "current": {
+          "text": "GET",
+          "value": "GET"
+        },
         "datasource": "spy",
         "hide": 0,
         "includeAll": false,
@@ -787,8 +797,8 @@
         "auto_count": 30,
         "auto_min": "10s",
         "current": {
-          "text": "5m",
-          "value": "5m"
+          "text": "1h",
+          "value": "1h"
         },
         "hide": 0,
         "label": null,
@@ -820,7 +830,7 @@
             "value": "3m"
           },
           {
-            "selected": true,
+            "selected": false,
             "text": "5m",
             "value": "5m"
           },
@@ -840,7 +850,7 @@
             "value": "30m"
           },
           {
-            "selected": false,
+            "selected": true,
             "text": "1h",
             "value": "1h"
           },
@@ -904,8 +914,8 @@
         "auto_count": 30,
         "auto_min": "10s",
         "current": {
-          "text": "3m",
-          "value": "3m"
+          "text": "1h",
+          "value": "1h"
         },
         "hide": 0,
         "label": null,
@@ -927,7 +937,7 @@
             "value": "1m"
           },
           {
-            "selected": true,
+            "selected": false,
             "text": "3m",
             "value": "3m"
           },
@@ -957,7 +967,7 @@
             "value": "40m"
           },
           {
-            "selected": false,
+            "selected": true,
             "text": "1h",
             "value": "1h"
           },
@@ -1047,7 +1057,7 @@
     ]
   },
   "timezone": "",
-  "title": "SPY2",
-  "uid": "spytest",
-  "version": 10
+  "title": "SPY3",
+  "uid": "spytest3",
+  "version": 1
 }

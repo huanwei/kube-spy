@@ -22,24 +22,14 @@ spec:
         volumeMounts:
         - name: host-time
           mountPath: /etc/localtime
+        - name: grafana-conf
+          mountPath: /etc/grafana/provisioning
       volumes:
       - name: host-time
         hostPath:
           path: /etc/localtime
+      - name: grafana-conf
+        hostPath:
+          path:  /root/go/src/github.com/huanwei/kube-spy/grafana-conf
 
----
-
-apiVersion: v1
-kind: Service
-metadata:
-  name: grafana-spy
-  namespace: default
-  labels:
-    name: grafana-spy
-spec:
-  type: NodePort
-  selector:
-    name: grafana-spy
-  ports:
-  - port: 3000
 

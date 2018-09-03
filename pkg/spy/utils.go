@@ -31,9 +31,9 @@ func GetConfig() *Config {
 	spyConfig := &Config{}
 	decoder.Decode(spyConfig)
 
-	for _,testCaseList:=range spyConfig.TestCaseLists{
-		for _,testCase:=range testCaseList.TestCases{
-			testCase.Method=string(bytes.ToUpper([]byte(testCase.Method)))
+	for index1,testCaseList:=range spyConfig.TestCaseLists{
+		for index2,testCase:=range testCaseList.TestCases{
+			spyConfig.TestCaseLists[index1].TestCases[index2].Method=string(bytes.ToUpper([]byte(testCase.Method)))
 		}
 	}
 

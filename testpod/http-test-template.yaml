@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "$appName"
+spec:
+  selector:
+    matchLabels:
+      app: "$appName"
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: "$appName"
+    spec:
+      containers:
+      - name: "$appName"
+        image: http-test:v0.1
+        imagePullPolicy: IfNotPresent
+        volumeMounts:
+        - name: etckubernetes
+          mountPath: /etc/kubernetes
+        - name: log
+          mountPath: /tmp
+        - name: varlibkubelet
+          mountPath: /var/lib/kubelet
+        ports:
+        - name: http
+          containerPort: 8888
+        #use arguments to link the service
+        args:  ["--nextService","$nextServiceName","--service","$currentServiceName"]
+      volumes:
+      - name: log
+        hostPath:
+          path: /tmp/http-test
+      - name: etckubernetes
+        hostPath:
+          path: /etc/kubernetes
+      - name: varlibkubelet
+        hostPath:
+          path: /var/lib/kubelet
+      nodeSelector:
+        http-test: "on"

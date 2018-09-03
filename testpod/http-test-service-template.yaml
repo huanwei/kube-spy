@@ -1,0 +1,11 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: "$currentServiceName"
+spec:
+  selector:
+    app: "$appName"
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 8888

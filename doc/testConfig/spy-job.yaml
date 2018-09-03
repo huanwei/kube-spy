@@ -1,0 +1,51 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: kube-spy
+  namespace: default
+  labels:
+    name: kube-spy
+spec:
+  template:
+    metadata:
+      labels:
+        name: kube-spy
+    spec:
+      nodeSelector:
+        spy: "on"
+      restartPolicy: OnFailure
+      containers:
+      - name: kube-spy
+        image: kube-spy:v0.1
+        args: ["-v=3"]
+        imagePullPolicy: IfNotPresent
+        volumeMounts:
+        - name: etckubernetes
+          mountPath: /etc/kubernetes
+        - name: varlibkubelet
+          mountPath: /var/lib/kubelet
+        - name: host-time
+          mountPath: /etc/localtime
+        - name: log
+          mountPath: /tmp
+        - name: config
+          mountPath: /spy
+      volumes:
+      - name: etckubernetes
+        hostPath:
+          path: /etc/kubernetes
+      - name: varlibkubelet
+        hostPath:
+          path: /var/lib/kubelet
+      - name: host-time
+        hostPath:
+          path: /etc/localtime
+      - name: log
+        hostPath:
+          path: /tmp
+      - name: config
+        configMap:
+          name: spy-config
+          items:
+            - key: spy
+              path: spy.conf

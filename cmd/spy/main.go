@@ -53,8 +53,10 @@ func main() {
 			if len(spyConfig.VictimServices[i].ChaosList) == 0 {
 				continue
 			}
-			if spyConfig.VictimServices[i].PingTimeout == 0 {
+			if spyConfig.VictimServices[i].PingTimeout <= 1 {
 				spyConfig.VictimServices[i].PingTimeout = 1
+			} else {
+				spyConfig.VictimServices[i].PingTimeout = spyConfig.VictimServices[i].PingTimeout - 1
 			}
 			for _, chaos := range spyConfig.VictimServices[i].ChaosList {
 				stop := make(chan bool, 1)

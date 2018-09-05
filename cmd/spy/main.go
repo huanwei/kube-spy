@@ -73,18 +73,25 @@ func main() {
 				cidrs, podNames := spy.GetPodsInfo(pods)
 				go spy.PingPods(services[i].Name, services[i].Namespace, podNames, cidrs, &chaos, stop, complete, spyConfig.VictimServices[i].PingTimeout)
 
+				time.Sleep(time.Duration(1) * time.Second)
+
 				// Add chaos
 				err := spy.AddChaos(clientset, spyConfig, services[i], &chaos, pods)
 				if err != nil {
 					glog.Errorf("Adding chaos error: %s", err)
 				}
+
 				time.Sleep(time.Duration(spyConfig.VictimServices[i].PingTimeout) * time.Second)
+
 				// Do API tests
 				spy.Dotests(clientset, spyConfig, &spyConfig.VictimServices[i], &chaos)
 
 				time.Sleep(time.Duration(spyConfig.VictimServices[i].PingTimeout) * time.Second)
+
 				// Clear chaos
 				spy.ClearChaos(clientset, spyConfig)
+
+				time.Sleep(time.Duration(3) * time.Second)
 
 				stop <- true
 				<-complete

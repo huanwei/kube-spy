@@ -100,6 +100,8 @@
 
   不通过，log中有记录，但grafana图形界面没有显示统计数据。
 
+  *通过，在grafana的victim标签内选中none，即可显示无chaos的数据。
+
 ##### TestCase2：
 
 - 输入：在某个服务上添加一个chaos
@@ -283,6 +285,8 @@
 - 测试结果：
 
   不通过，发送和接受请求均有延时
+
+  *通过，第一次发送请求需要通过TCP三次握手，这个过程中包括了接受TCP响应，因此同样会受到影响
 
   ![1536114449174](E:\mygit\go\src\github.com\huanwei\kube-spy\doc\img\VictimServices-ChaosList-ingress-egress-TestCase2.png)
 

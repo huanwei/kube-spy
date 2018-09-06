@@ -44,7 +44,6 @@ APISetting:
 TestCaseLists:
 - service: "http-test-service1"
   host: "httpbin.org"
-  TestCases:
 #  - method: "GET"
 #    url: "/"
 # Set request json body and headers
@@ -53,7 +52,12 @@ TestCaseLists:
     headers:
       Content-Type: "application/json"
     body: "{ languages: [ 'Ruby', 'Perl', 'Python', 'c' ] }"
-
+    # API for getting data to test idempotency, local setting can overwrite global setting
+    IdempotencyAPI:
+    - method:
+      url:
+      headers:
+      body:
 # Set form and files
   - method: "POST"
     url: "/post"

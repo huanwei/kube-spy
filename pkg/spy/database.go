@@ -108,7 +108,7 @@ func AddResponse(service *VictimService, chaos *Chaos, test *TestCase, response 
 		"response",
 		tags,
 		fields,
-		time.Now(),
+		response.ReceivedAt(),
 	)
 	if err != nil {
 		glog.Warningf("Fail to create point: %s", err)

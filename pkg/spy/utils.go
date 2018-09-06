@@ -155,7 +155,7 @@ func PingPod(serviceName, namespace, podName, cidr string, chaos *Chaos, finishe
 		timestamp = time.Now().Add(timestamp.Sub(time.Now()) / 2)
 		if err != nil {
 			timeout, _ := strconv.ParseFloat(pingTimeout, 64)
-			timeout = timeout * 1000
+			timeout = (timeout + 1) * 1000
 			glog.Infof(fmt.Sprintf("Failed to ping %s:%s", cidr, err))
 			loss = 100
 			min = timeout

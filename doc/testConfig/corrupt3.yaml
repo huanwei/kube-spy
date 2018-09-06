@@ -4,7 +4,7 @@ VictimServices:
 - name: "http-test-service1"
   ChaosList:
   - ingress: ",corrupt,50%"
-    egress: ",corrput,40%"
+    egress: ",corrupt,40%"
 - name: "http-test-service2"
   ChaosList:
 - name: "http-test-service3"

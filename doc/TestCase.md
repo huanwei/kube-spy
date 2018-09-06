@@ -7,9 +7,18 @@
 ##### TestCase1：
 
 - 输入：与服务实际所在不符的命名空间
+
 - 预期输出：相应报错信息
+
 - 配置文件：[namespace1.yaml](./testConfig/namespace1.yaml)
+
 - 测试结果：
+
+  通过
+
+  ```
+  Fail to get service http-test-service1 : services "http-test-service1" not found
+  ```
 
 ##### TestCase2：
 
@@ -21,6 +30,12 @@
 
 - 测试结果：
 
+  通过
+
+  ```
+  Fail to get service http-test-service1 : an empty namespace may not be set when a resource name is provided
+  ```
+
   
 
 #### VictimServices-name：
@@ -28,48 +43,92 @@
 ##### TestCase1：
 
 - 输入：与服务实际名称不符的名称
+
 - 预期输出：相应报错信息
+
 - 配置文件：[svc_name1.yaml](./testConfig/svc_name1.yaml)
+
 - 测试结果：
+
+  通过
+
+  ```
+  Fail to get service http-test-service? : services "http-test-service?" not found
+  ```
 
 ##### TestCase2：
 
 - 输入：空
+
 - 预期输出：相应报错信息
+
 - 配置文件：[svc_name2.yaml](./testConfig/svc_name2.yaml)
+
 - 测试结果：
+
+  通过
+
+  ```
+  Fail to get service  : resource name may not be empty
+  ```
 
 ##### TestCase3：
 
 - 输入：两次输入相同的服务名
+
 - 预期输出：对该服务分别进行两次故障注入
+
 - 配置文件：[svc_name3.yaml](./testConfig/svc_name3.yaml)
+
 - 测试结果：
 
+  通过
 
+![](./img/VictimServices-name-TestCase3.png)
 
 #### VictimServices-ChaosList：
 
 ##### TestCase1：
 
 - 输入：空
+
 - 预期输出：不添加chaos，正常运行
+
 - 配置文件：[chaoslist1.yaml](./testConfig/chaoslist1.yaml)
+
 - 测试结果：
+
+  不通过，log中有记录，但grafana图形界面没有显示统计数据。
+
+  *通过，在grafana的victim标签内选中none，即可显示无chaos的数据。
 
 ##### TestCase2：
 
 - 输入：在某个服务上添加一个chaos
+
 - 预期输出：添加chaos后正常运行
+
 - 配置文件：[chaoslist2.yaml](./testConfig/chaoslist2.yaml)
+
 - 测试结果：
+
+  通过
+
+  ![](./img/VictimServices-ChaosList-TestCase2.png)
 
 ##### TestCase3：
 
 - 输入：在某个服务上添加多个chaos
+
 - 预期输出：分多次测试每个chaos的添加影响
+
 - 配置文件：[chaoslist3.yaml](./testConfig/chaoslist3.yaml)
+
 - 测试结果：
+
+  通过
+
+  ![](./img/VictimServices-ChaosList-TestCase3.png)
 
 
 
@@ -78,48 +137,120 @@
 ##### TestCase1：
 
 - 输入：空
+
 - 预期输出：副本数不变，进行测试
+
 - 配置文件：[replica1.yaml](./testConfig/replica1.yaml)
+
 - 测试结果：
 
-##### TestCase2：
+  通过
 
-- 输入：1（原本有多个副本，或原本就是1个副本）
-- 预期输出：副本数被调整为1后进行测试
+  ![](./img/VictimServices-ChaosList-replica-TestCase1.png)
+
+  
+
+##### TestCase2-1：
+
+- 输入：1（原本有2个副本）
+
+- 预期输出：副本数被调整为1后进行测试，测试完成后恢复2个
+
 - 配置文件：[replica2.yaml](./testConfig/replica2.yaml)
+
 - 测试结果：
 
-##### TestCase3：
+  通过，测试过程中副本数为1，测试完成后副本数为2
 
-- 输入：3（原本有3个以上副本，或原本1个副本）
+  ![](./img/VictimServices-ChaosList-replica-TestCase2-1.png)
+
+##### TestCase2-2：
+
+- 输入：1（原本就是1个副本）
+
+- 预期输出：直接进行测试
+
+- 配置文件：[replica2.yaml](./testConfig/replica2.yaml)
+
+- 测试结果：
+
+  通过
+
+  ![1536063891283](./img/VictimServices-ChaosList-replica-TestCase2-2.png)
+
+##### TestCase3-1：
+
+- 输入：3（原本有3个以上副本）
+
 - 预期输出：副本数被调整为3后进行测试
+
 - 配置文件：[replica3.yaml](./testConfig/replica3.yaml)
+
 - 测试结果：
 
+  通过
 
+  ![](./img/VictimServices-ChaosList-replica-TestCase3-1.png)
+
+##### TestCase3-2：
+
+- 输入：3（原本有1个副本）
+
+- 预期输出：副本数被调整为3后进行测试
+
+- 配置文件：[replica3.yaml](./testConfig/replica3.yaml)
+
+- 测试结果：
+
+  通过
+
+  ![](./img/VictimServices-ChaosList-replica-TestCase3-2.png)
+
+  
 
 #### VictimServices-ChaosList-range：
 
 ##### TestCase1：
 
 - 输入：空
-- 预期输出：所有副本都没有被添加chaos
+
+- 预期输出：所有副本都被添加chaos
+
 - 配置文件：[range1.yaml](./testConfig/range1.yaml)
+
 - 测试结果：
+
+  通过
+
+  ![](./img/VictimServices-ChaosList-range-TestCase1.png)
 
 ##### TestCase2：
 
 - 输入：2（replica为3）
+
 - 预期输出：副本数被调整为3后，对前两个pod添加了chaos进行测试
+
 - 配置文件：[range2.yaml](./testConfig/range2.yaml)
+
 - 测试结果：
+
+  通过
+
+  ![](./img/VictimServices-ChaosList-range-TestCase2.png)
 
 ##### TestCase3：
 
 - 输入：50%（replica为3）
+
 - 预期输出：副本数被调整为3后，对第一个（取下整）pod添加了chaos进行测试
+
 - 配置文件：[range3.yaml](./testConfig/range3.yaml)
+
 - 测试结果：
+
+  通过
+
+  ![](./img/VictimServices-ChaosList-range-TestCase3.png)
 
 
 
@@ -128,9 +259,16 @@
 ##### TestCase1：
 
 - 输入：空
+
 - 预期输出：所有副本都没有被添加chaos
+
 - 配置文件：[chaos1.yaml](./testConfig/chaos1.yaml)
+
 - 测试结果：
+
+  通过
+
+  ![](./img/VictimServices-ChaosList-ingress-egress-TestCase1.png)
 
 ##### TestCase2：
 
@@ -146,6 +284,12 @@
 
 - 测试结果：
 
+  不通过，发送和接受请求均有延时
+
+  *通过，第一次发送请求需要通过TCP三次握手，这个过程中包括了接受TCP响应，因此同样会受到影响
+
+  ![1536114449174](E:\mygit\go\src\github.com\huanwei\kube-spy\doc\img\VictimServices-ChaosList-ingress-egress-TestCase2.png)
+
 ##### TestCase3：
 
 - 输入：
@@ -159,6 +303,10 @@
 - 配置文件：[rate2.yaml](./testConfig/rate2.yaml)
 
 - 测试结果：
+
+  通过
+
+  ![](./img/VictimServices-ChaosList-ingress-egress-TestCase3.png)
 
 ##### TestCase4：
 
@@ -175,6 +323,10 @@
 
 - 测试结果：
 
+  通过
+
+  ![](./img/VictimServices-ChaosList-ingress-egress-TestCase4.png)
+
 ##### TestCase5：
 
 - 输入：
@@ -189,6 +341,10 @@
 
 - 测试结果：
 
+  通过
+
+  ![](./img/VictimServices-ChaosList-ingress-egress-TestCase5.png)
+
 ##### TestCase6：
 
 - 输入：
@@ -202,6 +358,10 @@
 - 配置文件：[delay2.yaml](./testConfig/delay2.yaml)
 
 - 测试结果：
+
+  通过
+
+  ![](./img/VictimServices-ChaosList-ingress-egress-TestCase6.png)
 
 ##### TestCase7：
 
@@ -218,6 +378,10 @@
 
 - 测试结果：
 
+  通过
+
+  ![](./img/VictimServices-ChaosList-ingress-egress-TestCase7.png)
+
 ##### TestCase8：
 
 - 输入：
@@ -231,6 +395,10 @@
 - 配置文件：[loss1.yaml](./testConfig/loss1.yaml)
 
 - 测试结果：
+
+  通过
+
+  ![](./img/VictimServices-ChaosList-ingress-egress-TestCase8.png)
 
 ##### TestCase9：
 
@@ -246,6 +414,10 @@
 
 - 测试结果：
 
+  通过
+
+  ![](./img/VictimServices-ChaosList-ingress-egress-TestCase9.png)
+
 ##### TestCase10：
 
 - 输入：
@@ -259,6 +431,10 @@
 - 配置文件：[loss3.yaml](./testConfig/loss3.yaml)
 
 - 测试结果：
+
+  通过
+
+  ![](./img/VictimServices-ChaosList-ingress-egress-TestCase10.png)
 
 ##### TestCase11：
 
@@ -276,6 +452,12 @@
 
 - 测试结果：
 
+  通过
+
+  ![](./img/VictimServices-ChaosList-ingress-egress-TestCase11-c.png)
+
+  ![](./img/VictimServices-ChaosList-ingress-egress-TestCase11.png)
+
 ##### TestCase12：
 
 - 输入：
@@ -291,6 +473,12 @@
 - 配置文件：[duplicate2.yaml](./testConfig/duplicate2.yaml)
 
 - 测试结果：
+
+  通过
+
+  ![](./img/VictimServices-ChaosList-ingress-egress-TestCase12-c.png)
+
+  ![](./img/VictimServices-ChaosList-ingress-egress-TestCase12.png)
 
 ##### TestCase13：
 
@@ -309,6 +497,12 @@
 
 - 测试结果：
 
+  通过
+
+  ![](./img/VictimServices-ChaosList-ingress-egress-TestCase13-c.png)
+
+  ![1536131174619](E:\mygit\go\src\github.com\huanwei\kube-spy\doc\img\VictimServices-ChaosList-ingress-egress-TestCase13.png)
+
 ##### TestCase14：
 
 - 输入：
@@ -325,6 +519,12 @@
 
 - 测试结果：
 
+  通过
+
+  ![](./img/VictimServices-ChaosList-ingress-egress-TestCase5.png)
+
+  ![](./img/VictimServices-ChaosList-ingress-egress-TestCase14.png)
+
 ##### TestCase15：
 
 - 输入：
@@ -340,6 +540,12 @@
 - 配置文件：[reorder2.yaml](./testConfig/reorder2.yaml)
 
 - 测试结果：
+
+  通过
+
+  ![](./img/VictimServices-ChaosList-ingress-egress-TestCase6.png)
+
+  ![](./img/VictimServices-ChaosList-ingress-egress-TestCase15.png)
 
 ##### TestCase16：
 
@@ -358,6 +564,12 @@
 
 - 测试结果：
 
+  通过
+
+  ![](./img/VictimServices-ChaosList-ingress-egress-TestCase7.png)
+
+  ![](./img/VictimServices-ChaosList-ingress-egress-TestCase16.png)
+
 ##### TestCase17：
 
 - 输入：
@@ -368,11 +580,15 @@
 
    (与TestCase1进行对比)
 
-- 预期输出：入口流量ip包50%损坏，最终耗时波动较大
+- 预期输出：入口流量ip包50%损坏，最终http请求耗时波动较大
 
 - 配置文件：[corrupt1.yaml](./testConfig/corrupt1.yaml)
 
 - 测试结果：
+
+  通过
+
+  ![1536132644196](E:\mygit\go\src\github.com\huanwei\kube-spy\doc\img\VictimServices-ChaosList-ingress-egress-TestCase17.png)
 
 ##### TestCase18：
 
@@ -384,11 +600,15 @@
 
    (与TestCase1进行对比)
 
-- 预期输出：出口流量ip包40%损坏，最终耗时波动较大
+- 预期输出：出口流量ip包40%损坏，最终http请求耗时波动较大
 
 - 配置文件：[corrupt2.yaml](./testConfig/corrupt2.yaml)
 
 - 测试结果：
+
+  通过
+
+  ![](./img/VictimServices-ChaosList-ingress-egress-TestCase18.png)
 
 ##### TestCase19：
 
@@ -401,11 +621,15 @@
 
   (与TestCase1进行对比)
 
-- 预期输出：入口流量ip包50%损坏，出口流量ip包40%损坏，最终耗时波动较大
+- 预期输出：入口流量ip包50%损坏，出口流量ip包40%损坏，最终http请求耗时波动较大
 
 - 配置文件：[corrupt3.yaml](./testConfig/corrupt3.yaml)
 
 - 测试结果：
+
+  通过
+
+  ![](./img/VictimServices-ChaosList-ingress-egress-TestCase19.png)
 
 #### ClientSetting-retry：
 
@@ -429,7 +653,7 @@
 
 - 配置文件：[retry1.yaml](./testConfig/retry1.yaml)
 
-- 测试结果：
+- 测试结果：暂无可见数据
 
 ##### TestCase2：
 
@@ -451,7 +675,7 @@
 
 - 配置文件：[retry2.yaml](./testConfig/retry2.yaml)
 
-- 测试结果：
+- 测试结果：暂无可见数据
 
 ##### TestCase3：
 
@@ -473,7 +697,7 @@
 
 - 配置文件：[retry3.yaml](./testConfig/retry3.yaml)
 
-- 测试结果：
+- 测试结果：暂无可见数据
 
 #### ClientSetting-timeout：
 
@@ -484,17 +708,21 @@
   ```
   - name: "http-test-service1"
     ChaosList:
-    - ingress: ",delay,1000ms"
+    - ingress: ",delay,500ms"
       
   retryCount： 0
-  timeout: 2000
+  timeout: 3000
   ```
 
-- 预期输出：http请求发出后1000ms收到请求，没有超时
+- 预期输出：http请求发出后2000ms收到响应，没有超时
 
 - 配置文件：[timeout1.yaml](./testConfig/timeout1.yaml)
 
 - 测试结果：
+
+  通过
+
+  ![](./img/ClientSetting-timeout-TestCase1.png)
 
 ##### TestCase2：
 
@@ -514,3 +742,7 @@
 - 配置文件：[timeout2.yaml](./testConfig/timeout2.yaml)
 
 - 测试结果：
+
+  通过
+
+  ![](./img/ClientSetting-timeout-TestCase2.png)

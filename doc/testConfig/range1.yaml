@@ -3,7 +3,7 @@ Namespace: "default"
 VictimServices:
 - name: "http-test-service1"
   ChaosList:
-  - replica: 1
+  - replica: 5
     ingress: ",delay,50ms"
     egress: ",delay,50ms"
     range:

@@ -1,7 +1,6 @@
 package spy
 
 import (
-	"encoding/base64"
 	"github.com/go-resty/resty"
 	"github.com/golang/glog"
 	client_v2 "github.com/influxdata/influxdb/client/v2"
@@ -96,9 +95,9 @@ func AddResponse(service *VictimService, chaos *Chaos, test *TestCase, response 
 
 
 	if err != nil {
-		fields["body"] = base64.StdEncoding.EncodeToString([]byte(err.Error()))
+		fields["body"] = strconv.Quote(err.Error())
 	} else {
-		fields["body"] = base64.StdEncoding.EncodeToString([]byte(response.Body()))
+		fields["body"] = strconv.Quote(string(response.Body()))
 	}
 
 	fields["idempotent"] = idempotent

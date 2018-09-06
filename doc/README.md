@@ -133,6 +133,7 @@ struct {
 	APISetting    TestCase      `yaml:"APISetting"`
 	ClientSetting ClientSetting `yaml:"ClientSetting"`
 	TestCases     []TestCase    `yaml:"TestCases"`
+	IdempotencyAPI TestCase 
 }
 ```
 #### 参数说明
@@ -142,6 +143,7 @@ struct {
 * *`APISetting`与全局的`APISetting`作用相同，在冲突时优先级比全局的设置更高，低于单个的测试用例的优先级；
 * *`ClientSetting`与全局的`ClientSetting`作用相同，在冲突时优先级比全局的设置更高，低于单个的测试用例的优先级；
 * `TestCases`测试用例列表，详细说明在下方单独列出。
+* `IdempotencyAPI`幂等性测试接口，若设置了此API，则每次发送请求后会调用此API获取数据并进行比对，两次结果相同则具有幂等性
 
 ### `TestCases`测试用例列表（属于`TestCaseLists`)
 #### 结构

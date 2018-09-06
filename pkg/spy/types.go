@@ -9,22 +9,22 @@ type TestCase struct {
 		Username string `yaml:"username"`
 		Password string `yaml:"password"`
 	} `yaml:"BasicAuth"`
-	Headers        map[string]string   `yaml:"headers"`
-	Form           map[string]string   `yaml:"form"`
-	MultiForm      map[string][]string `yaml:"multiValueForm"`
-	MultiParams    map[string][]string `yaml:"multiValueParams"`
-	Files          map[string]string   `yaml:"files"`
-	PathParams     map[string]string   `yaml:"pathParams"`
-	Body           string              `yaml:"body"`
-	IdempotencyAPI TestCase            `yaml:"IdempotencyAPI"`
+	Headers     map[string]string   `yaml:"headers"`
+	Form        map[string]string   `yaml:"form"`
+	MultiForm   map[string][]string `yaml:"multiValueForm"`
+	MultiParams map[string][]string `yaml:"multiValueParams"`
+	Files       map[string]string   `yaml:"files"`
+	PathParams  map[string]string   `yaml:"pathParams"`
+	Body        string              `yaml:"body"`
 }
 
 type TestCaseList struct {
-	Service       string        `yaml:"service"`
-	Host          string        `yaml:"host"`
-	APISetting    TestCase      `yaml:"APISetting"`
-	ClientSetting ClientSetting `yaml:"ClientSetting"`
-	TestCases     []TestCase    `yaml:"TestCases"`
+	Service        string        `yaml:"service"`
+	Host           string        `yaml:"host"`
+	APISetting     TestCase      `yaml:"APISetting"`
+	ClientSetting  ClientSetting `yaml:"ClientSetting"`
+	TestCases      []TestCase    `yaml:"TestCases"`
+	IdempotencyAPI TestCase      `yaml:"IdempotencyAPI"`
 }
 
 type Chaos struct {

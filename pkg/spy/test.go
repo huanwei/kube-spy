@@ -123,12 +123,12 @@ func Dotests(config *Config, service *VictimService, chaos *Chaos) {
 			host = testcases.Host
 		}
 		// Do tests
-		for _, test := range testcases.TestCases {
-			if test.IdempotencyAPI.Method != "" {
+		if testcases.IdempotencyAPI.Method != "" {
+			for _, test := range testcases.TestCases {
 				err, response1 := DoTest(client, test, host)
-				err, idemResponse1 := DoTest(client, test.IdempotencyAPI, host)
+				err, idemResponse1 := DoTest(client, testcases.IdempotencyAPI, host)
 				err, response2 := DoTest(client, test, host)
-				err, idemResponse2 := DoTest(client, test.IdempotencyAPI, host)
+				err, idemResponse2 := DoTest(client, testcases.IdempotencyAPI, host)
 				if string(idemResponse1.Body()) != string(idemResponse2.Body()) {
 					AddResponse(service, chaos, &test, response1, err, false)
 					AddResponse(service, chaos, &test, response2, err, false)
@@ -140,7 +140,9 @@ func Dotests(config *Config, service *VictimService, chaos *Chaos) {
 					AddResponse(service, chaos, &test, idemResponse1, err, true)
 					AddResponse(service, chaos, &test, idemResponse2, err, true)
 				}
-			} else {
+			}
+		} else {
+			for _, test := range testcases.TestCases {
 				err, response1 := DoTest(client, test, host)
 				err, response2 := DoTest(client, test, host)
 				err, response3 := DoTest(client, test, host)

@@ -3,7 +3,6 @@ package spy
 import (
 	"github.com/go-resty/resty"
 	"github.com/golang/glog"
-	"k8s.io/client-go/kubernetes"
 	"time"
 )
 
@@ -108,7 +107,7 @@ func DoTest(client *resty.Client, test TestCase, host string) (error, *resty.Res
 	return err, response
 }
 
-func Dotests(clientset *kubernetes.Clientset, config *Config, service *VictimService, chaos *Chaos) {
+func Dotests(config *Config, service *VictimService, chaos *Chaos) {
 
 	for _, testcases := range config.TestCaseLists {
 		client := resty.New()
@@ -119,21 +118,44 @@ func Dotests(clientset *kubernetes.Clientset, config *Config, service *VictimSer
 		// Find host
 		var host string
 		if testcases.Host == "" {
-			host = testcases.Service+"."+config.Namespace
+			host = testcases.Service + "." + config.Namespace
 		} else {
 			host = testcases.Host
 		}
 		// Do tests
-		for _, test := range testcases.TestCases {
-			err, response1 := DoTest(client, test, host)
-			err, response2 := DoTest(client, test, host)
-			err, response3 := DoTest(client, test, host)
-			if string(response2.Body()) != string(response3.Body()) {
-				AddResponse(service, chaos, &test, response1, err, false)
-			} else {
-				AddResponse(service, chaos, &test, response1, err, true)
+		if testcases.IdempotencyAPI.Method != "" {
+			for _, test := range testcases.TestCases {
+				err, response1 := DoTest(client, test, host)
+				err, idemResponse1 := DoTest(client, testcases.IdempotencyAPI, host)
+				err, response2 := DoTest(client, test, host)
+				err, idemResponse2 := DoTest(client, testcases.IdempotencyAPI, host)
+				if string(idemResponse1.Body()) != string(idemResponse2.Body()) {
+					AddResponse(service, chaos, &test, response1, err, false)
+					AddResponse(service, chaos, &test, response2, err, false)
+					AddResponse(service, chaos, &test, idemResponse1, err, false)
+					AddResponse(service, chaos, &test, idemResponse2, err, false)
+				} else {
+					AddResponse(service, chaos, &test, response1, err, true)
+					AddResponse(service, chaos, &test, response2, err, true)
+					AddResponse(service, chaos, &test, idemResponse1, err, true)
+					AddResponse(service, chaos, &test, idemResponse2, err, true)
+				}
 			}
-
+		} else {
+			for _, test := range testcases.TestCases {
+				err, response1 := DoTest(client, test, host)
+				err, response2 := DoTest(client, test, host)
+				err, response3 := DoTest(client, test, host)
+				if string(response2.Body()) != string(response3.Body()) {
+					AddResponse(service, chaos, &test, response1, err, false)
+					AddResponse(service, chaos, &test, response2, err, false)
+					AddResponse(service, chaos, &test, response3, err, false)
+				} else {
+					AddResponse(service, chaos, &test, response1, err, true)
+					AddResponse(service, chaos, &test, response2, err, true)
+					AddResponse(service, chaos, &test, response3, err, true)
+				}
+			}
 		}
 		// Send response to db
 		SendResponses()

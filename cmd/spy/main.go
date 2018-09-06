@@ -47,7 +47,7 @@ func main() {
 		if i == -1 {
 			// Normal test
 			glog.Infof("None chaos test")
-			spy.Dotests(clientset, spyConfig, nil, nil)
+			spy.Dotests(spyConfig, nil, nil)
 		} else {
 			// No chaos for this service, skip
 			if len(spyConfig.VictimServices[i].ChaosList) == 0 {
@@ -84,7 +84,7 @@ func main() {
 				time.Sleep(time.Duration(spyConfig.VictimServices[i].PingTimeout) * time.Second)
 
 				// Do API tests
-				spy.Dotests(clientset, spyConfig, &spyConfig.VictimServices[i], &chaos)
+				spy.Dotests(spyConfig, &spyConfig.VictimServices[i], &chaos)
 
 				time.Sleep(time.Duration(spyConfig.VictimServices[i].PingTimeout) * time.Second)
 

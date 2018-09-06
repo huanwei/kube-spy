@@ -19,11 +19,12 @@ type TestCase struct {
 }
 
 type TestCaseList struct {
-	Service       string        `yaml:"service"`
-	Host          string        `yaml:"host"`
-	APISetting    TestCase      `yaml:"APISetting"`
-	ClientSetting ClientSetting `yaml:"ClientSetting"`
-	TestCases     []TestCase    `yaml:"TestCases"`
+	Service        string        `yaml:"service"`
+	Host           string        `yaml:"host"`
+	APISetting     TestCase      `yaml:"APISetting"`
+	ClientSetting  ClientSetting `yaml:"ClientSetting"`
+	TestCases      []TestCase    `yaml:"TestCases"`
+	IdempotencyAPI TestCase      `yaml:"IdempotencyAPI"`
 }
 
 type Chaos struct {
